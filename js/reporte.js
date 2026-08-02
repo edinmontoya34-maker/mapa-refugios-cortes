@@ -1,10 +1,10 @@
 /**
- * Gestión de reportes con Firebase Firestore
- * Este módulo maneja el almacenamiento de reportes en la base de datos
+ * Gestión de reportes con Firebase Firestore y Storage
+ * Este módulo maneja el almacenamiento de reportes e imágenes en Firebase
  */
 
 const Reporte = (() => {
-    // Configuración de Firebase (se debe reemplazar con tus credenciales)
+    // Configuración de Firebase (reemplazar con tus credenciales)
     const firebaseConfig = {
         apiKey: "TU_API_KEY_AQUI",
         authDomain: "TU_AUTH_DOMAIN_AQUI",
@@ -15,33 +15,105 @@ const Reporte = (() => {
     };
 
     let db = null;
+    let storage = null;
+    let firebaseInitializado = false;
+
+    // Configuración de validación de archivos
+    const CONFIG = {
+        FORMATOS_PERMITIDOS: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+        TAMAÑO_MAX_ARCHIVO: 5 * 1024 * 1024, // 5MB
+        CANTIDAD_MAX_ARCHIVOS: 5
+    };
 
     /**
-     * Inicializa Firebase Firestore
+     * Inicializa Firebase Firestore y Storage
      */
     const inicializarFirebase = () => {
         try {
-            // Inicializar Firebase
-            firebase.initializeApp(firebaseConfig);
+            // Verificar si Firebase ya está inicializado
+            if (firebase.apps.length === 0) {
+                firebase.initializeApp(firebaseConfig);
+            }
             
-            // Obtener referencia a Firestore
+            // Obtener referencias
             db = firebase.firestore();
+            storage = firebase.storage();
+            firebaseInitializado = true;
             
-            console.log('✓ Firebase Firestore inicializado correctamente');
+            console.log('✓ Firebase Firestore y Storage inicializados correctamente');
             return true;
         } catch (error) {
             console.error('Error al inicializar Firebase:', error);
+            firebaseInitializado = false;
             return false;
         }
     };
 
     /**
-     * Envía un reporte a Firestore
+     * Valida un archivo de imagen
      */
-    const enviar = async (reporteData) => {
-        if (!db) {
-            console.error('Firebase no está inicializado');
-            throw new Error('Firebase no está disponible');
+    const validarArchivo = (archivo) => {
+        // Validar formato
+        if (!CONFIG.FORMATOS_PERMITIDOS.includes(archivo.type)) {
+            return {
+                valido: false,
+                error: `Formato no permitido. Solo se aceptan: JPG, JPEG, PNG, WEBP`
+            };
+        }
+
+        // Validar tamaño
+        if (archivo.size > CONFIG.TAMAÑO_MAX_ARCHIVO) {
+            const tamaño = (CONFIG.TAMAÑO_MAX_ARCHIVO / (1024 * 1024)).toFixed(0);
+            return {
+                valido: false,
+                error: `El archivo "${archivo.name}" supera ${tamaño}MB`
+            };
+        }
+
+        return { valido: true };
+    };
+
+    /**
+     * Sube una imagen a Firebase Storage
+     */
+    const subirImagen = async (archivo, reporteId) => {
+        return new Promise((resolve, reject) => {
+            // Validar archivo
+            const validacion = validarArchivo(archivo);
+            if (!validacion.valido) {
+                reject(new Error(validacion.error));
+                return;
+            }
+
+            // Crear ruta en Storage
+            const timestamp = Date.now();
+            const nombreArchivo = `${timestamp}_${archivo.name}`;
+            const ruta = `reportes/${reporteId}/${nombreArchivo}`;
+            const reference = storage.ref(ruta);
+
+            // Subir archivo
+            reference.put(archivo)
+                .then((snapshot) => {
+                    console.log(`✓ Imagen subida: ${nombreArchivo}`);
+                    resolve({
+                        nombre: nombreArchivo,
+                        ruta: ruta,
+                        tamaño: snapshot.metadata.size
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error al subir imagen:', error);
+                    reject(new Error(`Error al subir imagen: ${error.message}`));
+                });
+        });
+    };
+
+    /**
+     * Envía un reporte con imágenes a Firestore
+     */
+    const enviar = async (reporteData, archivos = []) => {
+        if (!firebaseInitializado) {
+            throw new Error('Firebase no está inicializado. Verifica la configuración.');
         }
 
         try {
@@ -50,27 +122,60 @@ const Reporte = (() => {
                 throw new Error('Tipo y descripción son requeridos');
             }
 
-            // Preparar datos del reporte
+            // Validar cantidad de archivos
+            if (archivos.length > CONFIG.CANTIDAD_MAX_ARCHIVOS) {
+                throw new Error(`No puedes subir más de ${CONFIG.CANTIDAD_MAX_ARCHIVOS} imágenes`);
+            }
+
+            // Preparar datos del reporte sin imágenes
             const nuevoReporte = {
-                refugioId: reporteData.refugioId || null,
                 tipo: reporteData.tipo,
                 descripcion: reporteData.descripcion,
                 nombre: reporteData.nombre || null,
                 email: reporteData.email || null,
-                fecha: new Date(),
+                refugioId: reporteData.refugioId || null,
+                estado: 'pendiente',
+                fecha: new Date().toISOString(),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                estado: 'pendiente'
+                cantidadImagenes: archivos.length,
+                imagenes: []
             };
 
-            // Guardar en Firestore
+            // Guardar reporte inicialmente
             const docRef = await db.collection('reportes').add(nuevoReporte);
-            
-            console.log('✓ Reporte guardado con ID:', docRef.id);
-            
+            const reporteId = docRef.id;
+
+            console.log(`✓ Reporte creado con ID: ${reporteId}`);
+
+            // Subir imágenes si existen
+            let imagenesSubidas = [];
+            if (archivos.length > 0) {
+                try {
+                    const promesasSubida = archivos.map(archivo => 
+                        subirImagen(archivo, reporteId)
+                    );
+                    imagenesSubidas = await Promise.all(promesasSubida);
+                    console.log(`✓ ${imagenesSubidas.length} imágenes subidas correctamente`);
+
+                    // Actualizar documento con referencias de imágenes
+                    await db.collection('reportes').doc(reporteId).update({
+                        imagenes: imagenesSubidas
+                    });
+                } catch (errorImagenes) {
+                    // Si falla la subida de imágenes, el reporte ya fue guardado
+                    console.warn('Advertencia: Algunas imágenes no se pudieron subir:', errorImagenes.message);
+                    await db.collection('reportes').doc(reporteId).update({
+                        imagenes: imagenesSubidas,
+                        notaErrorImagenes: errorImagenes.message
+                    });
+                }
+            }
+
             return {
                 exitoso: true,
-                id: docRef.id,
-                mensaje: 'Reporte enviado correctamente'
+                id: reporteId,
+                mensaje: 'Reporte enviado correctamente',
+                imagenesSubidas: imagenesSubidas.length
             };
         } catch (error) {
             console.error('Error al enviar reporte:', error);
@@ -79,12 +184,11 @@ const Reporte = (() => {
     };
 
     /**
-     * Obtiene todos los reportes (solo para administración)
+     * Obtiene todos los reportes
      */
     const obtenerTodos = async () => {
-        if (!db) {
-            console.error('Firebase no está inicializado');
-            throw new Error('Firebase no está disponible');
+        if (!firebaseInitializado) {
+            throw new Error('Firebase no está inicializado');
         }
 
         try {
@@ -111,9 +215,8 @@ const Reporte = (() => {
      * Obtiene reportes por refugio
      */
     const obtenerPorRefugio = async (refugioId) => {
-        if (!db) {
-            console.error('Firebase no está inicializado');
-            throw new Error('Firebase no está disponible');
+        if (!firebaseInitializado) {
+            throw new Error('Firebase no está inicializado');
         }
 
         try {
@@ -141,9 +244,8 @@ const Reporte = (() => {
      * Obtiene estadísticas de reportes
      */
     const obtenerEstadisticas = async () => {
-        if (!db) {
-            console.error('Firebase no está inicializado');
-            throw new Error('Firebase no está disponible');
+        if (!firebaseInitializado) {
+            throw new Error('Firebase no está inicializado');
         }
 
         try {
@@ -152,7 +254,8 @@ const Reporte = (() => {
             const stats = {
                 total: querySnapshot.size,
                 porTipo: {},
-                porEstado: {}
+                porEstado: {},
+                totalImagenes: 0
             };
 
             querySnapshot.forEach((doc) => {
@@ -169,6 +272,11 @@ const Reporte = (() => {
                     stats.porEstado[data.estado] = 0;
                 }
                 stats.porEstado[data.estado]++;
+
+                // Contar total de imágenes
+                if (data.imagenes && Array.isArray(data.imagenes)) {
+                    stats.totalImagenes += data.imagenes.length;
+                }
             });
 
             return stats;
@@ -183,6 +291,8 @@ const Reporte = (() => {
         enviar,
         obtenerTodos,
         obtenerPorRefugio,
-        obtenerEstadisticas
+        obtenerEstadisticas,
+        validarArchivo,
+        CONFIG
     };
 })();
