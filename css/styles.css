@@ -1,0 +1,409 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --light-bg: #ecf0f1;
+    --white: #ffffff;
+    --text-dark: #2c3e50;
+    --text-light: #7f8c8d;
+    --border-color: #bdc3c7;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-bg);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+}
+
+/* ==================== HEADER ==================== */
+.header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--white);
+    padding: 1.5rem 2rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+.header-content h1 {
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.header-content .subtitle {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+.header-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.search-input {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 25px;
+    width: 250px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    color: var(--text-dark);
+}
+
+.search-input::placeholder {
+    color: var(--text-light);
+}
+
+.search-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+    transform: scale(1.02);
+}
+
+/* ==================== MAIN CONTENT ==================== */
+.main-content {
+    display: flex;
+    flex: 1;
+    gap: 0;
+    overflow: hidden;
+}
+
+.map-container {
+    flex: 1;
+    background-color: var(--white);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ==================== SIDEBAR ==================== */
+.sidebar {
+    width: 380px;
+    background-color: var(--white);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 2px solid var(--light-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, var(--light-bg) 0%, #f8f9fa 100%);
+}
+
+.sidebar-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.refugios-count {
+    background-color: var(--secondary-color);
+    color: var(--white);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.refugios-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.refugio-item {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background-color: var(--light-bg);
+    border-left: 4px solid var(--secondary-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refugio-item:hover {
+    background-color: #d5e8f7;
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
+}
+
+.refugio-item.active {
+    background-color: #d5e8f7;
+    border-left-color: var(--success-color);
+    box-shadow: var(--shadow);
+}
+
+.refugio-item h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.35rem;
+}
+
+.refugio-item p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+}
+
+.refugio-item .tipo {
+    display: inline-block;
+    background-color: var(--secondary-color);
+    color: var(--white);
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.loading {
+    text-align: center;
+    color: var(--text-light);
+    padding: 2rem 0;
+    font-size: 0.95rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-light);
+}
+
+.empty-state h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+/* ==================== SIDEBAR FOOTER ==================== */
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--light-bg);
+    flex-shrink: 0;
+}
+
+.report-button {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: linear-gradient(135deg, var(--warning-color) 0%, #e67e22 100%);
+    color: var(--white);
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.report-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.report-button:active {
+    transform: translateY(0);
+}
+
+.report-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ==================== LEAFLET OVERRIDES ==================== */
+.leaflet-control-attribution {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 0.75rem;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+}
+
+.leaflet-popup-content {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.leaflet-popup-content h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.leaflet-popup-content p {
+    margin: 0.25rem 0;
+}
+
+/* ==================== SCROLLBAR STYLING ==================== */
+.refugios-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.refugios-list::-webkit-scrollbar-track {
+    background: var(--light-bg);
+}
+
+.refugios-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.refugios-list::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 320px;
+    }
+    
+    .search-input {
+        width: 200px;
+    }
+    
+    .header-content h1 {
+        font-size: 1.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .header-content {
+        text-align: center;
+    }
+    
+    .header-content h1 {
+        font-size: 1.5rem;
+    }
+    
+    .header-controls {
+        justify-content: stretch;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+    
+    .main-content {
+        flex-direction: column-reverse;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: 300px;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .map-container {
+        flex: 1;
+        min-height: 400px;
+    }
+    
+    .sidebar-header {
+        padding: 1rem;
+    }
+    
+    .refugios-list {
+        padding: 0.75rem;
+    }
+    
+    .refugio-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .report-button {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 0.75rem;
+    }
+    
+    .header-content h1 {
+        font-size: 1.25rem;
+    }
+    
+    .header-content .subtitle {
+        font-size: 0.85rem;
+    }
+    
+    .sidebar {
+        height: 250px;
+    }
+    
+    .sidebar-header h2 {
+        font-size: 1rem;
+    }
+    
+    .refugio-item {
+        padding: 0.65rem;
+        margin-bottom: 0.4rem;
+    }
+    
+    .refugio-item h3 {
+        font-size: 0.85rem;
+    }
+    
+    .refugio-item p {
+        font-size: 0.75rem;
+    }
+}
