@@ -73,7 +73,7 @@
                     <textarea 
                         id="reportDescription" 
                         name="reportDescription" 
-                        rows="6" 
+                        rows="4" 
                         placeholder="Describe el problema o sugerencia en detalle..."
                         required
                     ></textarea>
@@ -99,13 +99,36 @@
                     >
                 </div>
 
+                <!-- Sección de fotografías -->
+                <div class="form-group">
+                    <label for="reportPhotos">Fotografías (Opcional)</label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <input 
+                            type="file" 
+                            id="reportPhotos" 
+                            name="reportPhotos" 
+                            multiple
+                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                            style="display: none;"
+                        >
+                        <div class="upload-placeholder">
+                            <p>📸 Arrastra imágenes aquí o haz clic para seleccionar</p>
+                            <p style="font-size: 12px; color: #7f8c8d;">JPG, JPEG, PNG o WEBP (máx. 5MB por imagen, hasta 5 imágenes)</p>
+                        </div>
+                    </div>
+                    <div class="photo-preview" id="photoPreview"></div>
+                </div>
+
                 <div class="form-actions">
                     <button type="button" class="button-cancel" id="cancelReportBtn">Cancelar</button>
-                    <button type="submit" class="button-submit">Enviar Reporte</button>
+                    <button type="submit" class="button-submit" id="submitReportBtn">Enviar Reporte</button>
                 </div>
             </form>
         </div>
     </div>
+
+    <!-- Toast de notificaciones -->
+    <div id="toast" class="toast"></div>
 
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -116,6 +139,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js"></script>
     
     <!-- Custom Scripts -->
     <script src="js/refugios.js"></script>
