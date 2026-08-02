@@ -38,8 +38,69 @@
                 <div class="refugios-list" id="refugiosList">
                     <p class="loading">Cargando refugios...</p>
                 </div>
+                <div class="sidebar-footer">
+                    <button class="report-button" id="reportButton">📋 Reportar</button>
+                </div>
             </aside>
         </main>
+    </div>
+
+    <!-- Modal de Reporte -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nuevo Reporte</h2>
+                <button class="close-button" id="closeReportModal">&times;</button>
+            </div>
+            <form id="reportForm" class="report-form">
+                <div class="form-group">
+                    <label for="reportType">Tipo de Reporte *</label>
+                    <select id="reportType" name="reportType" required>
+                        <option value="">-- Selecciona un tipo --</option>
+                        <option value="problema">Problema con el refugio</option>
+                        <option value="informacion">Información incorrecta</option>
+                        <option value="sugerencia">Sugerencia o mejora</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="reportDescription">Descripción *</label>
+                    <textarea 
+                        id="reportDescription" 
+                        name="reportDescription" 
+                        rows="6" 
+                        placeholder="Describe el problema o sugerencia en detalle..."
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="reportName">Nombre (Opcional)</label>
+                    <input 
+                        type="text" 
+                        id="reportName" 
+                        name="reportName" 
+                        placeholder="Tu nombre"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="reportEmail">Correo (Opcional)</label>
+                    <input 
+                        type="email" 
+                        id="reportEmail" 
+                        name="reportEmail" 
+                        placeholder="tu.email@ejemplo.com"
+                    >
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="button-cancel" id="cancelReportBtn">Cancelar</button>
+                    <button type="submit" class="button-submit">Enviar Reporte</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Leaflet JS -->
@@ -48,6 +109,7 @@
     <!-- Custom Scripts -->
     <script src="js/refugios.js"></script>
     <script src="js/mapa.js"></script>
+    <script src="js/reporte.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
