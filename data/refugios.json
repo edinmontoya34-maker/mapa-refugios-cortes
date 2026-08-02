@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "nombre": "Albergue Municipal La Ceiba",
+    "municipio": "La Ceiba",
+    "direccion": "Barrio La Paz, calle principal",
+    "latitud": 16.3667,
+    "longitud": -88.7667
+  },
+  {
+    "id": 2,
+    "nombre": "Centro de Evacuación Cortés",
+    "municipio": "San Pedro Sula",
+    "direccion": "Avenida Independencia, zona comercial",
+    "latitud": 15.5,
+    "longitud": -88.0333
+  },
+  {
+    "id": 3,
+    "nombre": "Refugio Temporal Puerto Cortés",
+    "municipio": "Puerto Cortés",
+    "direccion": "Zona Portuaria, edificio administrativo",
+    "latitud": 16.2531,
+    "longitud": -87.9433
+  },
+  {
+    "id": 4,
+    "nombre": "Punto de Reunión Estadio Olímpico",
+    "municipio": "San Pedro Sula",
+    "direccion": "Barrio Guamilito, estadio metropolitano",
+    "latitud": 15.4833,
+    "longitud": -88.0167
+  },
+  {
+    "id": 5,
+    "nombre": "Albergue Comunitario Baracoa",
+    "municipio": "Baracoa",
+    "direccion": "Centro del municipio, salón comunal",
+    "latitud": 16.3333,
+    "longitud": -87.9667
+  },
+  {
+    "id": 6,
+    "nombre": "Centro de Evacuación Limón",
+    "municipio": "Limón",
+    "direccion": "Avenida principal, instalaciones municipales",
+    "latitud": 16.8,
+    "longitud": -88.8167
+  },
+  {
+    "id": 7,
+    "nombre": "Refugio Temporal Omoa",
+    "municipio": "Omoa",
+    "direccion": "Zona costera, estructura cercana al puerto",
+    "latitud": 16.6467,
+    "longitud": -88.6667
+  },
+  {
+    "id": 8,
+    "nombre": "Punto de Reunión Biblioteca Central",
+    "municipio": "La Ceiba",
+    "direccion": "Centro histórico, edificio de cultura",
+    "latitud": 16.3733,
+    "longitud": -88.7733
+  },
+  {
+    "id": 9,
+    "nombre": "Albergue Santa Rita",
+    "municipio": "Santa Rita",
+    "direccion": "Sector central, instalaciones educativas",
+    "latitud": 15.7667,
+    "longitud": -87.95
+  },
+  {
+    "id": 10,
+    "nombre": "Centro de Evacuación Villanueva",
+    "municipio": "Villanueva",
+    "direccion": "Calle principal, edificio municipal",
+    "latitud": 15.6333,
+    "longitud": -88.1167
+  }
+]
