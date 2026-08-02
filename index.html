@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Refugios de Cortés</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🏘️ Mapa de Refugios de Cortés</h1>
+                <p class="subtitle">Refugios oficiales del departamento de Cortés</p>
+            </div>
+            <div class="header-controls">
+                <input type="text" id="searchInput" class="search-input" placeholder="Buscar refugio...">
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Mapa -->
+            <div id="map" class="map-container"></div>
+            
+            <!-- Sidebar con información -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Refugios</h2>
+                    <span class="refugios-count" id="refugiosCount">0</span>
+                </div>
+                <div class="refugios-list" id="refugiosList">
+                    <p class="loading">Cargando refugios...</p>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="js/refugios.js"></script>
+    <script src="js/mapa.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
