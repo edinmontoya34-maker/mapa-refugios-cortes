@@ -3,148 +3,376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa de Refugios de Cortés</title>
+    <title>Sistema de Refugios - Cortés</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    
-    <!-- Leaflet MarkerCluster CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.Default.css" />
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/reportes.css">
+    <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <h1>🏘️ Mapa de Refugios de Cortés</h1>
-                <p class="subtitle">Refugios oficiales del departamento de Cortés</p>
-            </div>
-            <div class="header-controls">
-                <input type="text" id="searchInput" class="search-input" placeholder="Buscar refugio...">
-            </div>
-        </header>
+    <!-- Vista principal del mapa -->
+    <div id="mapView" class="view active">
+        <div class="container">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <h1>🏘️ Mapa de Refugios de Cortés</h1>
+                    <p class="subtitle">Refugios oficiales del departamento de Cortés</p>
+                </div>
+                <div class="header-controls">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Buscar refugio...">
+                    <button class="btn-admin-login" id="btnAdminLogin">👤 Acceso Admin</button>
+                </div>
+            </header>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Mapa -->
-            <div id="map" class="map-container"></div>
-            
-            <!-- Sidebar con información -->
-            <aside class="sidebar">
-                <div class="sidebar-header">
-                    <h2>Refugios</h2>
-                    <span class="refugios-count" id="refugiosCount">0</span>
-                </div>
-                <div class="refugios-list" id="refugiosList">
-                    <p class="loading">Cargando refugios...</p>
-                </div>
-                <div class="sidebar-footer">
-                    <button class="report-button" id="reportButton">📋 Reportar</button>
-                </div>
-            </aside>
-        </main>
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Mapa -->
+                <div id="map" class="map-container"></div>
+                
+                <!-- Sidebar con información -->
+                <aside class="sidebar">
+                    <div class="sidebar-header">
+                        <h2>Refugios</h2>
+                        <span class="refugios-count" id="refugiosCount">0</span>
+                    </div>
+                    <div class="refugios-list" id="refugiosList">
+                        <p class="loading">Cargando refugios...</p>
+                    </div>
+                    <div class="sidebar-footer">
+                        <button class="report-button" id="reportButton">🚨 Reportar Emergencia</button>
+                    </div>
+                </aside>
+            </main>
+        </div>
     </div>
 
-    <!-- Modal de Reporte -->
-    <div id="reportModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Nuevo Reporte</h2>
-                <button class="close-button" id="closeReportModal">&times;</button>
-            </div>
-            <form id="reportForm" class="report-form">
-                <div class="form-group">
-                    <label for="reportType">Tipo de Reporte *</label>
-                    <select id="reportType" name="reportType" required>
-                        <option value="">-- Selecciona un tipo --</option>
-                        <option value="problema">Problema con el refugio</option>
-                        <option value="informacion">Información incorrecta</option>
-                        <option value="sugerencia">Sugerencia o mejora</option>
-                        <option value="otro">Otro</option>
-                    </select>
+    <!-- Vista de Login -->
+    <div id="loginView" class="view">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h1>🛡️ Panel de Administración</h1>
+                    <p>Acceso restringido para administradores</p>
                 </div>
-
-                <div class="form-group">
-                    <label for="reportDescription">Descripción *</label>
-                    <textarea 
-                        id="reportDescription" 
-                        name="reportDescription" 
-                        rows="4" 
-                        placeholder="Describe el problema o sugerencia en detalle..."
-                        required
-                    ></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="reportName">Nombre (Opcional)</label>
-                    <input 
-                        type="text" 
-                        id="reportName" 
-                        name="reportName" 
-                        placeholder="Tu nombre"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="reportEmail">Correo (Opcional)</label>
-                    <input 
-                        type="email" 
-                        id="reportEmail" 
-                        name="reportEmail" 
-                        placeholder="tu.email@ejemplo.com"
-                    >
-                </div>
-
-                <!-- Sección de fotografías -->
-                <div class="form-group">
-                    <label for="reportPhotos">Fotografías (Opcional)</label>
-                    <div class="file-upload-area" id="fileUploadArea">
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="loginEmail">Correo Electrónico</label>
                         <input 
-                            type="file" 
-                            id="reportPhotos" 
-                            name="reportPhotos" 
-                            multiple
-                            accept="image/jpeg,image/jpg,image/png,image/webp"
-                            style="display: none;"
+                            type="email" 
+                            id="loginEmail" 
+                            name="email" 
+                            placeholder="admin@example.com"
+                            required
                         >
-                        <div class="upload-placeholder">
-                            <p>📸 Arrastra imágenes aquí o haz clic para seleccionar</p>
-                            <p style="font-size: 12px; color: #7f8c8d;">JPG, JPEG, PNG o WEBP (máx. 5MB por imagen, hasta 5 imágenes)</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Contraseña</label>
+                        <input 
+                            type="password" 
+                            id="loginPassword" 
+                            name="password" 
+                            placeholder="••••••••"
+                            required
+                        >
+                    </div>
+                    <div id="loginError" class="error-message" style="display: none;"></div>
+                    <button type="submit" class="btn-login" id="loginSubmitBtn">Iniciar Sesión</button>
+                </form>
+                <div class="login-footer">
+                    <button type="button" class="btn-back" id="btnBackToMap">← Volver al mapa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Panel Admin -->
+    <div id="adminView" class="view">
+        <div class="admin-container">
+            <!-- Header del Admin -->
+            <header class="admin-header">
+                <div class="admin-header-left">
+                    <h1>📊 Panel de Administración</h1>
+                    <p class="admin-subtitle">Gestión de reportes de emergencia</p>
+                </div>
+                <div class="admin-header-right">
+                    <span class="admin-user-info" id="adminUserInfo">Administrador</span>
+                    <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+                </div>
+            </header>
+
+            <!-- Contenido del Admin -->
+            <main class="admin-content">
+                <!-- Contadores -->
+                <div class="stats-container">
+                    <div class="stat-card pending">
+                        <div class="stat-number" id="countPending">0</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                    <div class="stat-card processing">
+                        <div class="stat-number" id="countProcessing">0</div>
+                        <div class="stat-label">En Proceso</div>
+                    </div>
+                    <div class="stat-card resolved">
+                        <div class="stat-number" id="countResolved">0</div>
+                        <div class="stat-label">Resueltos</div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label>Estado:</label>
+                        <select id="filterStatus" class="filter-select">
+                            <option value="">Todos</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="en_proceso">En Proceso</option>
+                            <option value="resuelto">Resuelto</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Tipo:</label>
+                        <select id="filterType" class="filter-select">
+                            <option value="">Todos</option>
+                            <option value="inundacion">Inundación</option>
+                            <option value="derrumbe">Derrumbe</option>
+                            <option value="calle_bloqueada">Calle Bloqueada</option>
+                            <option value="personas_atrapadas">Personas Atrapadas</option>
+                            <option value="necesidad_agua">Necesidad de Agua</option>
+                            <option value="necesidad_alimentos">Necesidad de Alimentos</option>
+                            <option value="necesidad_medicamentos">Necesidad de Medicamentos</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabla de Reportes -->
+                <div class="reports-table-container">
+                    <table class="reports-table" id="reportsTable">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Ubicación</th>
+                                <th>Reportante</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center">Cargando reportes...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Vista de Reportes de Emergencia -->
+    <div id="emergencyReportView" class="view">
+        <div class="emergency-report-container">
+            <!-- Banner de advertencia -->
+            <div class="warning-banner">
+                ⚠️ <strong>PELIGRO DE VIDA:</strong> Si está en peligro inmediato, llame al <strong>911</strong> o <strong>190</strong> antes de usar este formulario.
+            </div>
+
+            <div class="report-card">
+                <button class="btn-back-small" id="btnBackFromReport">← Volver</button>
+
+                <div class="report-header">
+                    <h1>📢 Reportar Emergencia</h1>
+                    <p>Ayúdenos a coordinar la respuesta rápidamente</p>
+                </div>
+
+                <form id="emergencyReportForm" class="emergency-form">
+                    <!-- Tipo de Emergencia -->
+                    <div class="form-section">
+                        <h3>1. Tipo de Emergencia</h3>
+                        <div class="emergency-types" id="emergencyTypes">
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="inundacion" required>
+                                <span class="icon">🌊</span>
+                                <span class="label">Inundación</span>
+                            </label>
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="derrumbe">
+                                <span class="icon">🪨</span>
+                                <span class="label">Derrumbe</span>
+                            </label>
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="calle_bloqueada">
+                                <span class="icon">🚧</span>
+                                <span class="label">Calle Bloqueada</span>
+                            </label>
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="personas_atrapadas">
+                                <span class="icon">🆘</span>
+                                <span class="label">Personas Atrapadas</span>
+                            </label>
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="necesidad_agua">
+                                <span class="icon">💧</span>
+                                <span class="label">Necesidad de Agua</span>
+                            </label>
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="necesidad_alimentos">
+                                <span class="icon">🍽️</span>
+                                <span class="label">Necesidad de Alimentos</span>
+                            </label>
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="necesidad_medicamentos">
+                                <span class="icon">💊</span>
+                                <span class="label">Necesidad de Medicamentos</span>
+                            </label>
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="otro">
+                                <span class="icon">❓</span>
+                                <span class="label">Otro</span>
+                            </label>
                         </div>
                     </div>
-                    <div class="photo-preview" id="photoPreview"></div>
-                </div>
 
-                <div class="form-actions">
-                    <button type="button" class="button-cancel" id="cancelReportBtn">Cancelar</button>
-                    <button type="submit" class="button-submit" id="submitReportBtn">Enviar Reporte</button>
-                </div>
-            </form>
+                    <!-- Descripción -->
+                    <div class="form-section">
+                        <h3>2. Descripción</h3>
+                        <textarea 
+                            name="description" 
+                            id="reportDescription"
+                            placeholder="Describe la situación en detalle..."
+                            rows="6"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <!-- Ubicación -->
+                    <div class="form-section">
+                        <h3>3. Ubicación</h3>
+                        <div class="location-row">
+                            <div class="form-group">
+                                <label>Departamento *</label>
+                                <select name="department" id="reportDepartment" required>
+                                    <option value="">-- Selecciona --</option>
+                                    <option value="cortes">Cortés</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Municipio *</label>
+                                <select name="municipality" id="reportMunicipality" required>
+                                    <option value="">-- Selecciona departamento primero --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Ubicación Específica (colonia, calle, referencia) *</label>
+                            <input 
+                                type="text" 
+                                name="specificLocation" 
+                                id="reportLocation"
+                                placeholder="Ej: Colonia Las Flores, calle principal cerca del supermercado"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Datos de Contacto -->
+                    <div class="form-section">
+                        <h3>4. Datos de Contacto (Opcional)</h3>
+                        <p class="form-hint">Para que las autoridades puedan contactarlo</p>
+                        <div class="contact-row">
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input 
+                                    type="text" 
+                                    name="reporterName" 
+                                    id="reporterName"
+                                    placeholder="Tu nombre"
+                                >
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono</label>
+                                <input 
+                                    type="tel" 
+                                    name="reporterPhone" 
+                                    id="reporterPhone"
+                                    placeholder="+504 XXXX XXXX"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" id="btnCancelReport">Cancelar</button>
+                        <button type="submit" class="btn-submit" id="btnSubmitReport">Enviar Reporte</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Reporte -->
+    <div id="reportConfirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="confirmation-success">
+                <div class="success-icon">✓</div>
+                <h2>¡Reporte Recibido!</h2>
+                <p>Su reporte ha sido enviado correctamente a las autoridades.</p>
+                <p class="confirmation-number">ID de Reporte: <strong id="reportId">---</strong></p>
+                <p class="confirmation-hint">Guarde este número para referencia.</p>
+                <button type="button" class="btn-primary" id="btnNewReport">Enviar Otro Reporte</button>
+                <button type="button" class="btn-secondary" id="btnReturnToMap">Volver al Mapa</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalles del Reporte (Admin) -->
+    <div id="reportDetailModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Detalles del Reporte</h2>
+                <button type="button" class="close-button" id="btnCloseReportDetail">&times;</button>
+            </div>
+            <div class="modal-body" id="reportDetailContent">
+                <!-- Contenido cargado dinámicamente -->
+            </div>
         </div>
     </div>
 
     <!-- Toast de notificaciones -->
     <div id="toast" class="toast"></div>
 
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-indicator">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    
-    <!-- Leaflet MarkerCluster JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
     
     <!-- Custom Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/refugios.js"></script>
     <script src="js/mapa.js"></script>
     <script src="js/reporte.js"></script>
+    <script src="js/emergencia.js"></script>
+    <script src="js/admin.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
