@@ -140,13 +140,15 @@
                         <label>Tipo:</label>
                         <select id="filterType" class="filter-select">
                             <option value="">Todos</option>
-                            <option value="inundacion">Inundación</option>
-                            <option value="derrumbe">Derrumbe</option>
-                            <option value="calle_bloqueada">Calle Bloqueada</option>
-                            <option value="personas_atrapadas">Personas Atrapadas</option>
-                            <option value="necesidad_agua">Necesidad de Agua</option>
-                            <option value="necesidad_alimentos">Necesidad de Alimentos</option>
-                            <option value="necesidad_medicamentos">Necesidad de Medicamentos</option>
+                            <option value="refugio_mal_ubicado">Refugio mal ubicado</option>
+                            <option value="refugio_inexistente">Refugio inexistente</option>
+                            <option value="informacion_incorrecta">Información incorrecta</option>
+                            <option value="refugio_cerrado">Refugio cerrado</option>
+                            <option value="refugio_lleno">Refugio lleno</option>
+                            <option value="problema_acceso">Problema de acceso</option>
+                            <option value="problema_seguridad">Problema de seguridad</option>
+                            <option value="necesidad_suministros">Necesidad de suministros</option>
+                            <option value="emergencia">Emergencia</option>
                             <option value="otro">Otro</option>
                         </select>
                     </div>
@@ -174,6 +176,19 @@
                 </div>
             </main>
         </div>
+
+        <!-- Modal de detalles de reporte -->
+        <div id="reportDetailModal" class="modal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>Detalles del Reporte</h2>
+                    <button type="button" class="modal-close" id="btnCloseReportDetail">&times;</button>
+                </div>
+                <div class="modal-body" id="reportDetailContent">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Vista de Reportes de Emergencia -->
@@ -195,42 +210,52 @@
                 <form id="emergencyReportForm" class="emergency-form">
                     <!-- Tipo de Emergencia -->
                     <div class="form-section">
-                        <h3>1. Tipo de Emergencia</h3>
+                        <h3>1️⃣ Tipo de Emergencia</h3>
                         <div class="emergency-types" id="emergencyTypes">
                             <label class="emergency-type-btn">
-                                <input type="radio" name="emergencyType" value="inundacion" required>
-                                <span class="icon">🌊</span>
-                                <span class="label">Inundación</span>
+                                <input type="radio" name="emergencyType" value="refugio_mal_ubicado">
+                                <span class="icon">📍</span>
+                                <span class="label">Refugio mal ubicado</span>
                             </label>
                             <label class="emergency-type-btn">
-                                <input type="radio" name="emergencyType" value="derrumbe">
-                                <span class="icon">🪨</span>
-                                <span class="label">Derrumbe</span>
+                                <input type="radio" name="emergencyType" value="refugio_inexistente">
+                                <span class="icon">❌</span>
+                                <span class="label">Refugio inexistente</span>
                             </label>
                             <label class="emergency-type-btn">
-                                <input type="radio" name="emergencyType" value="calle_bloqueada">
-                                <span class="icon">🚧</span>
-                                <span class="label">Calle Bloqueada</span>
+                                <input type="radio" name="emergencyType" value="informacion_incorrecta">
+                                <span class="icon">⚠️</span>
+                                <span class="label">Info incorrecta</span>
                             </label>
                             <label class="emergency-type-btn">
-                                <input type="radio" name="emergencyType" value="personas_atrapadas">
-                                <span class="icon">🆘</span>
-                                <span class="label">Personas Atrapadas</span>
+                                <input type="radio" name="emergencyType" value="refugio_cerrado">
+                                <span class="icon">🔒</span>
+                                <span class="label">Refugio cerrado</span>
                             </label>
                             <label class="emergency-type-btn">
-                                <input type="radio" name="emergencyType" value="necesidad_agua">
-                                <span class="icon">💧</span>
-                                <span class="label">Necesidad de Agua</span>
+                                <input type="radio" name="emergencyType" value="refugio_lleno">
+                                <span class="icon">👥</span>
+                                <span class="label">Refugio lleno</span>
                             </label>
                             <label class="emergency-type-btn">
-                                <input type="radio" name="emergencyType" value="necesidad_alimentos">
-                                <span class="icon">🍽️</span>
-                                <span class="label">Necesidad de Alimentos</span>
+                                <input type="radio" name="emergencyType" value="problema_acceso">
+                                <span class="icon">🚫</span>
+                                <span class="label">Acceso bloqueado</span>
                             </label>
                             <label class="emergency-type-btn">
-                                <input type="radio" name="emergencyType" value="necesidad_medicamentos">
-                                <span class="icon">💊</span>
-                                <span class="label">Necesidad de Medicamentos</span>
+                                <input type="radio" name="emergencyType" value="problema_seguridad">
+                                <span class="icon">🛡️</span>
+                                <span class="label">Problema seguridad</span>
+                            </label>
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="necesidad_suministros">
+                                <span class="icon">📦</span>
+                                <span class="label">Falta suministros</span>
+                            </label>
+                            <label class="emergency-type-btn">
+                                <input type="radio" name="emergencyType" value="emergencia">
+                                <span class="icon">🚨</span>
+                                <span class="label">Emergencia</span>
                             </label>
                             <label class="emergency-type-btn">
                                 <input type="radio" name="emergencyType" value="otro">
@@ -240,139 +265,130 @@
                         </div>
                     </div>
 
-                    <!-- Descripción -->
-                    <div class="form-section">
-                        <h3>2. Descripción</h3>
-                        <textarea 
-                            name="description" 
-                            id="reportDescription"
-                            placeholder="Describe la situación en detalle..."
-                            rows="6"
-                            required
-                        ></textarea>
-                    </div>
-
                     <!-- Ubicación -->
                     <div class="form-section">
-                        <h3>3. Ubicación</h3>
+                        <h3>2️⃣ Ubicación</h3>
+                        <div class="form-hint">Selecciona el departamento y municipio del refugio</div>
                         <div class="location-row">
                             <div class="form-group">
-                                <label>Departamento *</label>
-                                <select name="department" id="reportDepartment" required>
-                                    <option value="">-- Selecciona --</option>
+                                <label for="reportDepartment">Departamento</label>
+                                <select id="reportDepartment" class="form-control" required>
+                                    <option value="">-- Selecciona departamento --</option>
                                     <option value="cortes">Cortés</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Municipio *</label>
-                                <select name="municipality" id="reportMunicipality" required>
-                                    <option value="">-- Selecciona departamento primero --</option>
+                                <label for="reportMunicipality">Municipio</label>
+                                <select id="reportMunicipality" class="form-control" required>
+                                    <option value="">-- Selecciona municipio --</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Ubicación Específica (colonia, calle, referencia) *</label>
+                            <label for="reportLocation">Ubicación Específica</label>
                             <input 
                                 type="text" 
-                                name="specificLocation" 
-                                id="reportLocation"
-                                placeholder="Ej: Colonia Las Flores, calle principal cerca del supermercado"
+                                id="reportLocation" 
+                                class="form-control"
+                                placeholder="Ej: Esquina de la 1ª Avenida con 2ª Calle"
                                 required
                             >
                         </div>
                     </div>
 
-                    <!-- Datos de Contacto -->
+                    <!-- Descripción -->
                     <div class="form-section">
-                        <h3>4. Datos de Contacto (Opcional)</h3>
-                        <p class="form-hint">Para que las autoridades puedan contactarlo</p>
+                        <h3>3️⃣ Descripción del Problema</h3>
+                        <div class="form-hint">Describe con detalle qué está ocurriendo (mínimo 10 caracteres)</div>
+                        <div class="form-group">
+                            <textarea 
+                                id="reportDescription" 
+                                class="form-control"
+                                placeholder="Describe el problema en detalle..."
+                                rows="5"
+                                required
+                            ></textarea>
+                            <small id="charCount" style="color: #7f8c8d;">0/1000 caracteres</small>
+                        </div>
+                    </div>
+
+                    <!-- Información del Reportante -->
+                    <div class="form-section">
+                        <h3>4️⃣ Información de Contacto</h3>
+                        <div class="form-hint">Opcional - Ayuda para coordinación de respuesta</div>
                         <div class="contact-row">
                             <div class="form-group">
-                                <label>Nombre</label>
+                                <label for="reporterName">Nombre (Opcional)</label>
                                 <input 
                                     type="text" 
-                                    name="reporterName" 
-                                    id="reporterName"
+                                    id="reporterName" 
+                                    class="form-control"
                                     placeholder="Tu nombre"
                                 >
                             </div>
                             <div class="form-group">
-                                <label>Teléfono</label>
+                                <label for="reporterPhone">Teléfono (Opcional)</label>
                                 <input 
                                     type="tel" 
-                                    name="reporterPhone" 
-                                    id="reporterPhone"
-                                    placeholder="+504 XXXX XXXX"
+                                    id="reporterPhone" 
+                                    class="form-control"
+                                    placeholder="+504 XXXX-XXXX"
                                 >
                             </div>
                         </div>
                     </div>
 
-                    <!-- Botones -->
+                    <!-- Botones de acción -->
                     <div class="form-actions">
                         <button type="button" class="btn-cancel" id="btnCancelReport">Cancelar</button>
                         <button type="submit" class="btn-submit" id="btnSubmitReport">Enviar Reporte</button>
                     </div>
                 </form>
             </div>
-        </div>
-    </div>
 
-    <!-- Modal de Confirmación de Reporte -->
-    <div id="reportConfirmationModal" class="modal">
-        <div class="modal-content">
-            <div class="confirmation-success">
-                <div class="success-icon">✓</div>
-                <h2>¡Reporte Recibido!</h2>
-                <p>Su reporte ha sido enviado correctamente a las autoridades.</p>
-                <p class="confirmation-number">ID de Reporte: <strong id="reportId">---</strong></p>
-                <p class="confirmation-hint">Guarde este número para referencia.</p>
-                <button type="button" class="btn-primary" id="btnNewReport">Enviar Otro Reporte</button>
-                <button type="button" class="btn-secondary" id="btnReturnToMap">Volver al Mapa</button>
+            <!-- Modal de confirmación -->
+            <div id="reportConfirmationModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="confirmation-success">
+                            <div class="success-icon">✓</div>
+                            <h2>¡Reporte Enviado!</h2>
+                            <p>Tu reporte ha sido registrado correctamente.</p>
+                            <p>Nuestro equipo lo procesará lo antes posible.</p>
+                            
+                            <div class="confirmation-number">
+                                <p>Tu número de reporte:</p>
+                                <strong id="reportId">-</strong>
+                            </div>
+
+                            <p class="confirmation-hint">Guarda este número para futuras consultas</p>
+
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-primary" id="btnNewReport" style="flex: 1;">Nuevo Reporte</button>
+                                <button class="btn-secondary" id="btnReturnToMap" style="flex: 1;">Volver al Mapa</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Detalles del Reporte (Admin) -->
-    <div id="reportDetailModal" class="modal">
-        <div class="modal-content modal-large">
-            <div class="modal-header">
-                <h2>Detalles del Reporte</h2>
-                <button type="button" class="close-button" id="btnCloseReportDetail">&times;</button>
-            </div>
-            <div class="modal-body" id="reportDetailContent">
-                <!-- Contenido cargado dinámicamente -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast de notificaciones -->
+    <!-- Notificaciones Toast -->
     <div id="toast" class="toast"></div>
-
-    <!-- Loading Indicator -->
-    <div id="loadingIndicator" class="loading-indicator">
-        <div class="spinner"></div>
-        <p>Cargando...</p>
-    </div>
 
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-    
-    <!-- Custom Scripts -->
+
+    <!-- Scripts de la aplicación -->
     <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/refugios.js"></script>
-    <script src="js/mapa.js"></script>
-    <script src="js/reporte.js"></script>
     <script src="js/emergencia.js"></script>
     <script src="js/admin.js"></script>
+    <script src="js/refugios.js"></script>
+    <script src="js/mapa.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
