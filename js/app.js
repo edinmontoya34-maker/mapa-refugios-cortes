@@ -13,6 +13,11 @@ const App = (() => {
         console.log('🚀 Iniciando aplicación...');
         
         try {
+            // Inicializar módulos
+            Vista.inicializar();
+            Notificaciones.inicializar();
+            Auth.inicializar();
+            
             // Inicializar mapa
             Mapa.inicializar();
             
@@ -142,7 +147,7 @@ const App = (() => {
             <div class="refugio-item" data-id="${refugio.id}">
                 <h3>${refugio.nombre}</h3>
                 <p><strong>Municipio:</strong> ${refugio.municipio}</p>
-                <p><strong>Dirección:</strong> ${refugio.direccion}</p>
+                <p><strong>Dirección:</strong> ${refugio.direccion || refugio.comunidad || 'N/A'}</p>
             </div>
         `).join('');
     };
@@ -151,8 +156,11 @@ const App = (() => {
      * Abre el formulario de reporte
      */
     const abrirFormularioReporte = () => {
-        alert('Formulario de reporte - Esta funcionalidad se implementará próximamente');
-        console.log('Abriendo formulario de reporte...');
+        Vista.mostrar('emergencyReportView');
+        // Reiniciar formulario
+        const form = document.getElementById('emergencyReportForm');
+        if (form) form.reset();
+        console.log('✓ Formulario de reporte abierto');
     };
 
     /**
