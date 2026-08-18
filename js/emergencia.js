@@ -24,6 +24,7 @@ const Emergencia = (() => {
         const btnBackFromReport = document.getElementById('btnBackFromReport');
         const btnNewReport = document.getElementById('btnNewReport');
         const btnReturnToMap = document.getElementById('btnReturnToMap');
+        const reportDescription = document.getElementById('reportDescription');
 
         if (emergencyForm) {
             emergencyForm.addEventListener('submit', (e) => {
@@ -58,6 +59,15 @@ const Emergencia = (() => {
         if (btnReturnToMap) {
             btnReturnToMap.addEventListener('click', () => {
                 Vista.mostrar('mapView');
+            });
+        }
+
+        if (reportDescription) {
+            reportDescription.addEventListener('input', (e) => {
+                const charCount = document.getElementById('charCount');
+                if (charCount) {
+                    charCount.textContent = e.target.value.length + '/1000 caracteres';
+                }
             });
         }
 
