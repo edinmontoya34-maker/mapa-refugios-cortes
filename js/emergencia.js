@@ -29,7 +29,7 @@ const Emergencia = (() => {
      */
     const configurarEventos = () => {
         const reportButton = document.getElementById('reportButton');
-        const btnReportEmergency = document.getElementById('btnSubmitReport');
+        const btnSubmitReport = document.getElementById('btnSubmitReport');
         const btnCancelReport = document.getElementById('btnCancelReport');
         const btnBackFromReport = document.getElementById('btnBackFromReport');
         const emergencyForm = document.getElementById('emergencyReportForm');
@@ -40,7 +40,7 @@ const Emergencia = (() => {
         if (reportButton) {
             reportButton.addEventListener('click', () => {
                 Vista.mostrar('emergencyReportView');
-                document.getElementById('emergencyReportForm').reset();
+                if (emergencyForm) emergencyForm.reset();
             });
         }
 
@@ -69,7 +69,7 @@ const Emergencia = (() => {
 
         if (btnNewReport) {
             btnNewReport.addEventListener('click', () => {
-                document.getElementById('emergencyReportForm').reset();
+                if (emergencyForm) emergencyForm.reset();
                 Vista.mostrar('emergencyReportView');
             });
         }
@@ -93,7 +93,7 @@ const Emergencia = (() => {
         municipalitySelect.innerHTML = '<option value="">-- Selecciona municipio --</option>';
 
         if (departamento) {
-            const municipiosList = Auth.obtenerMunicipios(departamento);
+            const municipiosList = Datos.obtenerMunicipios(departamento);
             municipiosList.forEach(municipio => {
                 const option = document.createElement('option');
                 option.value = municipio.toLowerCase().replace(/\s+/g, '_');
@@ -109,42 +109,58 @@ const Emergencia = (() => {
     const enviarReporte = async () => {
         const form = document.getElementById('emergencyReportForm');
         const btnSubmit = document.getElementById('btnSubmitReport');
+        const tipoEmergencia = document.querySelector('input[name="emergencyType"]:checked');
 
         try {
+            // Validar que se haya seleccionado un tipo
+            if (!tipoEmergencia) {
+                Notificaciones.mostrar('Por favor selecciona un tipo de emergencia', 'error');
+                return;
+            }
+
+            const descripcion = document.getElementById('reportDescription').value;
+            const ubicacionEspecifica = document.getElementById('reportLocation').value;
+
+            // Validar campos requeridos
+            if (!descripcion.trim()) {
+                Notificaciones.mostrar('Por favor escribe una descripción', 'error');
+                return;
+            }
+
+            if (!ubicacionEspecifica.trim()) {
+                Notificaciones.mostrar('Por favor indica la ubicación específica', 'error');
+                return;
+            }
+
             btnSubmit.disabled = true;
             btnSubmit.textContent = '⏳ Enviando...';
 
             // Obtener datos del formulario
             const reporteData = {
-                tipo: document.querySelector('input[name="emergencyType"]:checked').value,
-                descripcion: document.getElementById('reportDescription').value,
+                tipo: tipoEmergencia.value,
+                descripcion: descripcion,
                 departamento: document.getElementById('reportDepartment').value,
                 municipio: document.getElementById('reportMunicipality').value,
-                ubicacionEspecifica: document.getElementById('reportLocation').value,
+                ubicacionEspecifica: ubicacionEspecifica,
                 nombre: document.getElementById('reporterName').value || null,
                 telefono: document.getElementById('reporterPhone').value || null,
                 estado: 'pendiente',
                 fecha: new Date().toISOString(),
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                aceptaTrabajo: true
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
-
-            // Validar datos requeridos
-            if (!reporteData.tipo || !reporteData.descripcion || !reporteData.ubicacionEspecifica) {
-                throw new Error('Por favor completa todos los campos requeridos');
-            }
 
             // Guardar en Firestore
             const db = FirebaseConfig.getDB();
             const docRef = await db.collection('reportes_emergencia').add(reporteData);
+
+            console.log('✓ Reporte de emergencia enviado:', docRef.id);
 
             // Mostrar confirmación
             mostrarConfirmacion(docRef.id);
 
             // Limpiar formulario
             form.reset();
-
-            console.log('✓ Reporte de emergencia enviado:', docRef.id);
+            Notificaciones.mostrar('Reporte enviado correctamente', 'success');
 
         } catch (error) {
             console.error('Error al enviar reporte:', error);
@@ -163,6 +179,7 @@ const Emergencia = (() => {
         const modal = document.getElementById('reportConfirmationModal');
         if (modal) {
             modal.classList.add('active');
+            Vista.mostrar('emergencyReportView');
         }
     };
 
