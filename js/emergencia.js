@@ -9,7 +9,7 @@ const Emergencia = (() => {
      * Inicializa el módulo de emergencia
      */
     const inicializar = () => {
-        console.log('🚨 Inicializando sistema de reportes...');
+        console.log('🚨 Inicializando sistema de reportes de emergencia...');
         configurarEventos();
         cargarMunicipios();
     };
@@ -97,7 +97,7 @@ const Emergencia = (() => {
     };
 
     /**
-     * Envía el reporte
+     * Envía el reporte de emergencia
      */
     const enviarReporte = async () => {
         const form = document.getElementById('emergencyReportForm');
@@ -166,7 +166,7 @@ const Emergencia = (() => {
             form.reset();
             Notificaciones.mostrar('Reporte enviado correctamente', 'success');
 
-            console.log('✓ Reporte enviado:', reporteId);
+            console.log('✓ Reporte de emergencia enviado:', reporteId);
 
         } catch (error) {
             console.error('Error al enviar reporte:', error);

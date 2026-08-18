@@ -51,7 +51,7 @@ const Admin = (() => {
     };
 
     /**
-     * Carga todos los reportes
+     * Carga todos los reportes de localStorage
      */
     const cargarReportes = () => {
         try {
@@ -66,7 +66,7 @@ const Admin = (() => {
     };
 
     /**
-     * Actualiza los contadores
+     * Actualiza los contadores de estadísticas
      */
     const actualizarEstadisticas = () => {
         const pendientes = reportes.filter(r => r.estado === 'pendiente').length;
@@ -83,7 +83,7 @@ const Admin = (() => {
     };
 
     /**
-     * Filtra reportes
+     * Filtra y muestra reportes según criterios
      */
     const filtrarReportes = () => {
         const statusFilter = document.getElementById('filterStatus').value;
@@ -118,11 +118,19 @@ const Admin = (() => {
         tbody.innerHTML = listaReportes.map(reporte => `
             <tr>
                 <td>${formatearFecha(reporte.fecha)}</td>
-                <td><span class="type-badge">${obtenerEtiquetaTipo(reporte.tipo)}</span></td>
+                <td>
+                    <span class="type-badge">${obtenerEtiquetaTipo(reporte.tipo)}</span>
+                </td>
                 <td>${reporte.municipio}</td>
                 <td>${reporte.nombre || 'Anónimo'}</td>
-                <td><span class="status-badge ${reporte.estado}">${obtenerEtiquetaEstado(reporte.estado)}</span></td>
-                <td><button class="btn-ver-detalles" onclick="Admin.verDetalles('${reporte.id}')">Ver Detalles</button></td>
+                <td>
+                    <span class="status-badge ${reporte.estado}">
+                        ${obtenerEtiquetaEstado(reporte.estado)}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-ver-detalles" onclick="Admin.verDetalles('${reporte.id}')">Ver Detalles</button>
+                </td>
             </tr>
         `).join('');
     };
@@ -199,7 +207,7 @@ const Admin = (() => {
     };
 
     /**
-     * Guarda actualizaciones
+     * Guarda las actualizaciones de un reporte
      */
     const guardarActualizacion = (reporteId) => {
         const nuevoEstado = document.getElementById('nuevoEstado').value;
@@ -245,7 +253,7 @@ const Admin = (() => {
     };
 
     /**
-     * Cierra el modal
+     * Cierra el modal de detalles
      */
     const cerrarDetalleReporte = () => {
         const modal = document.getElementById('reportDetailModal');
@@ -256,7 +264,7 @@ const Admin = (() => {
     };
 
     /**
-     * Obtiene etiqueta de tipo
+     * Obtiene la etiqueta de tipo de reporte
      */
     const obtenerEtiquetaTipo = (tipo) => {
         const tipos = {
@@ -275,7 +283,7 @@ const Admin = (() => {
     };
 
     /**
-     * Obtiene etiqueta de estado
+     * Obtiene la etiqueta de estado
      */
     const obtenerEtiquetaEstado = (estado) => {
         const estados = {
@@ -287,7 +295,7 @@ const Admin = (() => {
     };
 
     /**
-     * Formatea fecha
+     * Formatea una fecha
      */
     const formatearFecha = (fecha) => {
         const fechaObj = new Date(fecha);
