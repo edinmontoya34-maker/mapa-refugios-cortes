@@ -65,7 +65,7 @@ const Emergencia = (() => {
             reportDescription.addEventListener('input', (e) => {
                 const charCount = document.getElementById('charCount');
                 if (charCount) {
-                    charCount.textContent = e.target.value.length + '/1000 caracteres';
+                    charCount.textContent = obtenerTextoConteoCaracteres(e.target.value.length);
                 }
             });
         }
@@ -95,8 +95,25 @@ const Emergencia = (() => {
         }
 
         if (charCount) {
-            charCount.textContent = '0/1000 caracteres';
+            charCount.textContent = `0/${obtenerLimiteDescripcion()} caracteres`;
         }
+    };
+
+    /**
+     * Obtiene el límite configurado para la descripción
+     */
+    const obtenerLimiteDescripcion = () => {
+        const reportDescription = document.getElementById('reportDescription');
+        return reportDescription && reportDescription.maxLength > 0
+            ? reportDescription.maxLength
+            : 1000;
+    };
+
+    /**
+     * Genera el texto del contador de caracteres
+     */
+    const obtenerTextoConteoCaracteres = (cantidadActual) => {
+        return `${cantidadActual}/${obtenerLimiteDescripcion()} caracteres`;
     };
 
     /**

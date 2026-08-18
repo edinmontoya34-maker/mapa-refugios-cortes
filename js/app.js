@@ -21,9 +21,13 @@ const App = (() => {
             // Configurar eventos lo antes posible para no bloquear acciones críticas
             configurarEventos();
             
-            const mapaDisponible = typeof window.L !== 'undefined' && typeof Mapa !== 'undefined';
-            if (mapaDisponible) {
-                Mapa.inicializar();
+            let mapaDisponible = false;
+            if (typeof window.L !== 'undefined' && typeof Mapa !== 'undefined') {
+                try {
+                    mapaDisponible = Boolean(Mapa.inicializar());
+                } catch (mapaError) {
+                    console.warn('⚠️ No se pudo inicializar el mapa:', mapaError);
+                }
             } else {
                 console.warn('⚠️ Leaflet no está disponible. El mapa no se cargará, pero el módulo de reportes seguirá funcionando.');
             }
@@ -79,8 +83,7 @@ const App = (() => {
         }
 
         // Evento de botón de reporte
-        if (reportButton && reportButton.dataset.reportesBound !== 'true') {
-            reportButton.dataset.reportesBound = 'true';
+        if (reportButton) {
             reportButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 abrirFormularioReporte();
@@ -167,6 +170,7 @@ const App = (() => {
         if (typeof Emergencia !== 'undefined' && typeof Emergencia.abrirFormulario === 'function') {
             Emergencia.abrirFormulario();
         } else {
+            console.warn('⚠️ Emergencia.abrirFormulario no está disponible; usando apertura básica del formulario.');
             Vista.mostrar('emergencyReportView');
             const form = document.getElementById('emergencyReportForm');
             if (form) form.reset();
