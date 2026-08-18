@@ -1,25 +1,15 @@
 /**
  * Sistema de reportes de emergencia para ciudadanos
  * Formulario público sin autenticación requerida
+ * Almacena reportes en localStorage
  */
 
 const Emergencia = (() => {
-    const tiposEmergencia = {
-        inundacion: { icono: '🌊', label: 'Inundación' },
-        derrumbe: { icono: '🪨', label: 'Derrumbe' },
-        calle_bloqueada: { icono: '🚧', label: 'Calle Bloqueada' },
-        personas_atrapadas: { icono: '🆘', label: 'Personas Atrapadas' },
-        necesidad_agua: { icono: '💧', label: 'Necesidad de Agua' },
-        necesidad_alimentos: { icono: '🍽️', label: 'Necesidad de Alimentos' },
-        necesidad_medicamentos: { icono: '💊', label: 'Necesidad de Medicamentos' },
-        otro: { icono: '❓', label: 'Otro' }
-    };
-
     /**
      * Inicializa el módulo de emergencia
      */
     const inicializar = () => {
-        console.log('🚨 Inicializando sistema de reportes de emergencia...');
+        console.log('🚨 Inicializando sistema de reportes...');
         configurarEventos();
         cargarMunicipios();
     };
@@ -28,20 +18,22 @@ const Emergencia = (() => {
      * Configura los eventos del formulario
      */
     const configurarEventos = () => {
-        const reportButton = document.getElementById('reportButton');
-        const btnSubmitReport = document.getElementById('btnSubmitReport');
-        const btnCancelReport = document.getElementById('btnCancelReport');
-        const btnBackFromReport = document.getElementById('btnBackFromReport');
         const emergencyForm = document.getElementById('emergencyReportForm');
         const departmentSelect = document.getElementById('reportDepartment');
+        const btnCancelReport = document.getElementById('btnCancelReport');
+        const btnBackFromReport = document.getElementById('btnBackFromReport');
         const btnNewReport = document.getElementById('btnNewReport');
         const btnReturnToMap = document.getElementById('btnReturnToMap');
 
-        if (reportButton) {
-            reportButton.addEventListener('click', () => {
-                Vista.mostrar('emergencyReportView');
-                if (emergencyForm) emergencyForm.reset();
+        if (emergencyForm) {
+            emergencyForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                enviarReporte();
             });
+        }
+
+        if (departmentSelect) {
+            departmentSelect.addEventListener('change', cargarMunicipios);
         }
 
         if (btnCancelReport) {
@@ -56,17 +48,6 @@ const Emergencia = (() => {
             });
         }
 
-        if (emergencyForm) {
-            emergencyForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                enviarReporte();
-            });
-        }
-
-        if (departmentSelect) {
-            departmentSelect.addEventListener('change', cargarMunicipios);
-        }
-
         if (btnNewReport) {
             btnNewReport.addEventListener('click', () => {
                 if (emergencyForm) emergencyForm.reset();
@@ -79,6 +60,8 @@ const Emergencia = (() => {
                 Vista.mostrar('mapView');
             });
         }
+
+        console.log('✓ Eventos del formulario configurados');
     };
 
     /**
@@ -104,63 +87,86 @@ const Emergencia = (() => {
     };
 
     /**
-     * Envía el reporte de emergencia
+     * Sanitiza un string para evitar XSS
+     */
+    const sanitizar = (texto) => {
+        if (!texto) return '';
+        const div = document.createElement('div');
+        div.textContent = texto;
+        return div.innerHTML;
+    };
+
+    /**
+     * Envía el reporte
      */
     const enviarReporte = async () => {
         const form = document.getElementById('emergencyReportForm');
         const btnSubmit = document.getElementById('btnSubmitReport');
-        const tipoEmergencia = document.querySelector('input[name="emergencyType"]:checked');
+        const tipoReporte = document.querySelector('input[name="emergencyType"]:checked');
 
         try {
             // Validar que se haya seleccionado un tipo
-            if (!tipoEmergencia) {
-                Notificaciones.mostrar('Por favor selecciona un tipo de emergencia', 'error');
+            if (!tipoReporte) {
+                Notificaciones.mostrar('Por favor selecciona un tipo de reporte', 'error');
                 return;
             }
 
-            const descripcion = document.getElementById('reportDescription').value;
-            const ubicacionEspecifica = document.getElementById('reportLocation').value;
+            const descripcion = document.getElementById('reportDescription').value.trim();
+            const ubicacionEspecifica = document.getElementById('reportLocation').value.trim();
+            const municipio = document.getElementById('reportMunicipality').value;
 
-            // Validar campos requeridos
-            if (!descripcion.trim()) {
+            // Validaciones
+            if (!descripcion) {
                 Notificaciones.mostrar('Por favor escribe una descripción', 'error');
                 return;
             }
 
-            if (!ubicacionEspecifica.trim()) {
+            if (descripcion.length < 10) {
+                Notificaciones.mostrar('La descripción debe tener al menos 10 caracteres', 'error');
+                return;
+            }
+
+            if (descripcion.length > 1000) {
+                Notificaciones.mostrar('La descripción no puede superar 1000 caracteres', 'error');
+                return;
+            }
+
+            if (!ubicacionEspecifica) {
                 Notificaciones.mostrar('Por favor indica la ubicación específica', 'error');
+                return;
+            }
+
+            if (!municipio) {
+                Notificaciones.mostrar('Por favor selecciona un municipio', 'error');
                 return;
             }
 
             btnSubmit.disabled = true;
             btnSubmit.textContent = '⏳ Enviando...';
 
-            // Obtener datos del formulario
+            // Obtener datos y sanitizarlos
             const reporteData = {
-                tipo: tipoEmergencia.value,
-                descripcion: descripcion,
-                departamento: document.getElementById('reportDepartment').value,
-                municipio: document.getElementById('reportMunicipality').value,
-                ubicacionEspecifica: ubicacionEspecifica,
-                nombre: document.getElementById('reporterName').value || null,
-                telefono: document.getElementById('reporterPhone').value || null,
+                tipo: tipoReporte.value,
+                descripcion: sanitizar(descripcion),
+                municipio: municipio,
+                ubicacionEspecifica: sanitizar(ubicacionEspecifica),
+                nombre: sanitizar(document.getElementById('reporterName').value || ''),
+                telefono: sanitizar(document.getElementById('reporterPhone').value || ''),
                 estado: 'pendiente',
-                fecha: new Date().toISOString(),
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                tipoReporte: 'ciudadano'
             };
 
-            // Guardar en Firestore
-            const db = FirebaseConfig.getDB();
-            const docRef = await db.collection('reportes_emergencia').add(reporteData);
-
-            console.log('✓ Reporte de emergencia enviado:', docRef.id);
+            // Guardar en localStorage
+            const reporteId = AlmacenamientoReportes.guardar(reporteData);
 
             // Mostrar confirmación
-            mostrarConfirmacion(docRef.id);
+            mostrarConfirmacion(reporteId);
 
             // Limpiar formulario
             form.reset();
             Notificaciones.mostrar('Reporte enviado correctamente', 'success');
+
+            console.log('✓ Reporte enviado:', reporteId);
 
         } catch (error) {
             console.error('Error al enviar reporte:', error);
@@ -175,11 +181,14 @@ const Emergencia = (() => {
      * Muestra la pantalla de confirmación
      */
     const mostrarConfirmacion = (reporteId) => {
-        document.getElementById('reportId').textContent = reporteId;
+        const reportIdElement = document.getElementById('reportId');
+        if (reportIdElement) {
+            reportIdElement.textContent = reporteId;
+        }
+        
         const modal = document.getElementById('reportConfirmationModal');
         if (modal) {
             modal.classList.add('active');
-            Vista.mostrar('emergencyReportView');
         }
     };
 
@@ -187,3 +196,12 @@ const Emergencia = (() => {
         inicializar
     };
 })();
+
+// Inicializar cuando esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => Emergencia.inicializar(), 100);
+    });
+} else {
+    setTimeout(() => Emergencia.inicializar(), 100);
+}

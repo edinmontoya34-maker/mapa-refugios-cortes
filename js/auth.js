@@ -6,22 +6,10 @@
 const Auth = (() => {
     let usuarioActual = null;
 
-    /**
-     * Datos de municipios por departamento
-     */
-    const municipios = {
-        cortes: [
-            'San Pedro Sula',
-            'Choloma',
-            'Puerto Cortés',
-            'La Lima',
-            'Villanueva',
-            'Potrerillos',
-            'Pimienta',
-            'San Manuel',
-            'Omoa',
-            'Baracoa'
-        ]
+    // Datos de demostración (en producción usar backend seguro)
+    const ADMIN_DEMO = {
+        email: 'admin@refugios.hn',
+        password: 'admin123'
     };
 
     /**
@@ -103,36 +91,22 @@ const Auth = (() => {
             btnSubmit.disabled = true;
             btnSubmit.textContent = 'Verificando...';
 
-            // Consultar administrador en Firestore
-            const db = FirebaseConfig.getDB();
-            const adminDoc = await db.collection('administradores')
-                .where('email', '==', email)
-                .limit(1)
-                .get();
+            // Simular autenticación
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-            if (adminDoc.empty) {
+            if (email !== ADMIN_DEMO.email || password !== ADMIN_DEMO.password) {
                 mostrarError(errorDiv, 'Correo o contraseña incorrectos');
                 btnSubmit.disabled = false;
                 btnSubmit.textContent = 'Iniciar Sesión';
-                return;
-            }
-
-            const admin = adminDoc.docs[0].data();
-
-            // Verificar contraseña (nota: en producción usar autenticación segura)
-            if (admin.password !== password) {
-                mostrarError(errorDiv, 'Correo o contraseña incorrectos');
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = 'Iniciar Sesión';
+                console.warn('⚠️ Intento de login fallido:', email);
                 return;
             }
 
             // Crear sesión
             usuarioActual = {
-                id: adminDoc.docs[0].id,
-                email: admin.email,
-                nombre: admin.nombre,
-                rol: admin.rol
+                email: email,
+                nombre: 'Administrador',
+                rol: 'admin'
             };
 
             // Guardar en localStorage
@@ -148,8 +122,11 @@ const Auth = (() => {
 
             // Mostrar panel admin
             Vista.mostrar('adminView');
+            Admin.inicializar();
 
             Notificaciones.mostrar(`¡Bienvenido ${usuarioActual.nombre}!`, 'success');
+
+            console.log('✓ Login exitoso:', email);
 
         } catch (error) {
             console.error('Error en login:', error);
@@ -200,23 +177,22 @@ const Auth = (() => {
     const logout = () => {
         usuarioActual = null;
         localStorage.removeItem('sesionAdmin');
-        document.getElementById('loginForm').reset();
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) loginForm.reset();
         Vista.mostrar('mapView');
         Notificaciones.mostrar('Sesión cerrada correctamente', 'info');
-    };
-
-    /**
-     * Obtiene los municipios de un departamento
-     */
-    const obtenerMunicipios = (departamento) => {
-        return municipios[departamento] || [];
+        console.log('✓ Logout exitoso');
     };
 
     return {
         inicializar,
         estaAutenticado,
         obtenerUsuario,
-        logout,
-        obtenerMunicipios
+        logout
     };
 })();
+
+// Mostrar credenciales de demostración en consola
+console.log('🔐 CREDENCIALES DE DEMOSTRACIÓN:');
+console.log('  Email: admin@refugios.hn');
+console.log('  Contraseña: admin123');

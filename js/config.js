@@ -1,72 +1,60 @@
 /**
- * Configuración centralizada de Firebase
- * Contiene las credenciales y referencias globales
+ * Módulo de configuración
+ * Almacena constantes y configuraciones globales
  */
 
-const FirebaseConfig = {
-    // IMPORTANTE: Reemplaza estos valores con tus credenciales de Firebase
-    config: {
-        apiKey: "TU_API_KEY_AQUI",
-        authDomain: "TU_AUTH_DOMAIN_AQUI",
-        projectId: "TU_PROJECT_ID_AQUI",
-        storageBucket: "TU_STORAGE_BUCKET_AQUI",
-        messagingSenderId: "TU_MESSAGING_SENDER_ID_AQUI",
-        appId: "TU_APP_ID_AQUI"
+const CONFIG = {
+    APP_NAME: 'Mapa de Refugios de Cortés',
+    VERSION: '2.0.0',
+    
+    // Configuración de mapas
+    MAP: {
+        CENTER: [15.5, -88.0],
+        ZOOM: 10,
+        MIN_ZOOM: 8,
+        MAX_ZOOM: 18
     },
 
-    db: null,
-    storage: null,
-    auth: null,
-
-    /**
-     * Inicializa Firebase
-     */
-    initialize: function() {
-        try {
-            // Verificar si ya está inicializado
-            if (firebase.apps.length === 0) {
-                firebase.initializeApp(this.config);
-            }
-
-            this.db = firebase.firestore();
-            this.storage = firebase.storage();
-            this.auth = firebase.auth();
-
-            console.log('✓ Firebase inicializado correctamente');
-            return true;
-        } catch (error) {
-            console.error('Error al inicializar Firebase:', error);
-            return false;
-        }
+    // Configuración de almacenamiento
+    STORAGE: {
+        REPORTES_KEY: 'reportes_refugios_cortes',
+        SESSION_KEY: 'sesionAdmin',
+        REFUGIOS_KEY: 'refugios_cache'
     },
 
-    /**
-     * Obtiene la referencia a Firestore
-     */
-    getDB: function() {
-        return this.db;
+    // Tipos de reporte
+    REPORT_TYPES: {
+        refugio_mal_ubicado: '📍 Refugio mal ubicado',
+        refugio_inexistente: '❌ Refugio inexistente',
+        informacion_incorrecta: '⚠️ Información incorrecta',
+        refugio_cerrado: '🔒 Refugio cerrado',
+        refugio_lleno: '👥 Refugio lleno',
+        problema_acceso: '🚫 Problema de acceso',
+        problema_seguridad: '🛡️ Problema de seguridad',
+        necesidad_suministros: '📦 Necesidad de suministros',
+        emergencia: '🚨 Emergencia',
+        otro: '❓ Otro'
     },
 
-    /**
-     * Obtiene la referencia a Storage
-     */
-    getStorage: function() {
-        return this.storage;
+    // Estados de reporte
+    REPORT_STATUS: {
+        pendiente: '⏳ Pendiente',
+        en_proceso: '🔄 En Proceso',
+        resuelto: '✓ Resuelto'
     },
 
-    /**
-     * Obtiene la referencia a Auth
-     */
-    getAuth: function() {
-        return this.auth;
-    }
+    // Municipios de Cortés
+    MUNICIPALITIES: [
+        'San Pedro Sula',
+        'Choloma',
+        'Puerto Cortés',
+        'La Lima',
+        'Villanueva',
+        'Potrerillos',
+        'Pimienta',
+        'San Manuel',
+        'Omoa',
+        'Baracoa',
+        'San Antonio de Cortés'
+    ]
 };
-
-// Inicializar cuando esté disponible Firebase
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => FirebaseConfig.initialize(), 100);
-    });
-} else {
-    setTimeout(() => FirebaseConfig.initialize(), 100);
-}

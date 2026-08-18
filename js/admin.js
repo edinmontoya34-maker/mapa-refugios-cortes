@@ -1,5 +1,5 @@
 /**
- * Panel de administración para gestión de reportes de emergencia
+ * Panel de administración para gestión de reportes
  * Solo accesible para administradores autenticados
  */
 
@@ -51,28 +51,14 @@ const Admin = (() => {
     };
 
     /**
-     * Carga todos los reportes de Firestore
+     * Carga todos los reportes
      */
-    const cargarReportes = async () => {
+    const cargarReportes = () => {
         try {
-            const db = FirebaseConfig.getDB();
-            const snapshot = await db.collection('reportes_emergencia')
-                .orderBy('timestamp', 'desc')
-                .get();
-
-            reportes = [];
-            snapshot.forEach(doc => {
-                reportes.push({
-                    id: doc.id,
-                    ...doc.data()
-                });
-            });
-
+            reportes = AlmacenamientoReportes.obtenerTodos();
             actualizarEstadisticas();
             mostrarReportes(reportes);
-
             console.log('✓ Reportes cargados:', reportes.length);
-
         } catch (error) {
             console.error('Error al cargar reportes:', error);
             Notificaciones.mostrar('Error al cargar reportes', 'error');
@@ -80,20 +66,24 @@ const Admin = (() => {
     };
 
     /**
-     * Actualiza los contadores de estadísticas
+     * Actualiza los contadores
      */
     const actualizarEstadisticas = () => {
         const pendientes = reportes.filter(r => r.estado === 'pendiente').length;
         const enProceso = reportes.filter(r => r.estado === 'en_proceso').length;
         const resueltos = reportes.filter(r => r.estado === 'resuelto').length;
 
-        document.getElementById('countPending').textContent = pendientes;
-        document.getElementById('countProcessing').textContent = enProceso;
-        document.getElementById('countResolved').textContent = resueltos;
+        const countPending = document.getElementById('countPending');
+        const countProcessing = document.getElementById('countProcessing');
+        const countResolved = document.getElementById('countResolved');
+
+        if (countPending) countPending.textContent = pendientes;
+        if (countProcessing) countProcessing.textContent = enProceso;
+        if (countResolved) countResolved.textContent = resueltos;
     };
 
     /**
-     * Filtra y muestra reportes según criterios
+     * Filtra reportes
      */
     const filtrarReportes = () => {
         const statusFilter = document.getElementById('filterStatus').value;
@@ -118,6 +108,8 @@ const Admin = (() => {
     const mostrarReportes = (listaReportes) => {
         const tbody = document.getElementById('reportsTableBody');
         
+        if (!tbody) return;
+
         if (listaReportes.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay reportes</td></tr>';
             return;
@@ -125,22 +117,12 @@ const Admin = (() => {
 
         tbody.innerHTML = listaReportes.map(reporte => `
             <tr>
-                <td>${formatearFecha(reporte.timestamp.toDate())}</td>
-                <td>
-                    <span class="type-badge">${obtenerEtiquetaTipo(reporte.tipo)}</span>
-                </td>
+                <td>${formatearFecha(reporte.fecha)}</td>
+                <td><span class="type-badge">${obtenerEtiquetaTipo(reporte.tipo)}</span></td>
                 <td>${reporte.municipio}</td>
                 <td>${reporte.nombre || 'Anónimo'}</td>
-                <td>
-                    <span class="status-badge ${reporte.estado}">
-                        ${obtenerEtiquetaEstado(reporte.estado)}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn-ver-detalles" onclick="Admin.verDetalles('${reporte.id}')">
-                        Ver Detalles
-                    </button>
-                </td>
+                <td><span class="status-badge ${reporte.estado}">${obtenerEtiquetaEstado(reporte.estado)}</span></td>
+                <td><button class="btn-ver-detalles" onclick="Admin.verDetalles('${reporte.id}')">Ver Detalles</button></td>
             </tr>
         `).join('');
     };
@@ -149,7 +131,7 @@ const Admin = (() => {
      * Abre los detalles de un reporte
      */
     const verDetalles = (reporteId) => {
-        reporteActual = reportes.find(r => r.id === reporteId);
+        reporteActual = AlmacenamientoReportes.obtenerPorId(reporteId);
         
         if (!reporteActual) {
             Notificaciones.mostrar('Reporte no encontrado', 'error');
@@ -170,26 +152,16 @@ const Admin = (() => {
     const mostrarDetalleReporte = (reporte) => {
         const content = document.getElementById('reportDetailContent');
         
-        const notas = reporte.notas || [];
-        const notasHTML = notas.map((nota, index) => `
-            <div class="nota-item">
-                <div class="nota-header">
-                    <strong>Nota ${index + 1}</strong>
-                    <span class="nota-fecha">${formatearFecha(nota.timestamp)}</span>
-                </div>
-                <p>${nota.contenido}</p>
-            </div>
-        `).join('');
-
         content.innerHTML = `
             <div class="reporte-detalle">
                 <div class="detalle-seccion">
                     <h3>Información del Reporte</h3>
                     <div class="detalle-info">
                         <p><strong>ID:</strong> ${reporte.id}</p>
-                        <p><strong>Fecha:</strong> ${formatearFecha(reporte.timestamp.toDate())}</p>
+                        <p><strong>Fecha:</strong> ${formatearFecha(reporte.fecha)}</p>
                         <p><strong>Tipo:</strong> ${obtenerEtiquetaTipo(reporte.tipo)}</p>
-                        <p><strong>Ubicación:</strong> ${reporte.municipio} - ${reporte.ubicacionEspecifica}</p>
+                        <p><strong>Municipio:</strong> ${reporte.municipio}</p>
+                        <p><strong>Ubicación:</strong> ${reporte.ubicacionEspecifica}</p>
                         <p><strong>Descripción:</strong></p>
                         <p class="descripcion">${reporte.descripcion}</p>
                     </div>
@@ -206,13 +178,6 @@ const Admin = (() => {
                 </div>
 
                 <div class="detalle-seccion">
-                    <h3>Historial de Notas</h3>
-                    <div class="notas-container">
-                        ${notasHTML || '<p class="sin-notas">Sin notas aún</p>'}
-                    </div>
-                </div>
-
-                <div class="detalle-seccion">
                     <h3>Actualizar Reporte</h3>
                     <div class="actualizar-form">
                         <div class="form-group">
@@ -223,13 +188,10 @@ const Admin = (() => {
                                 <option value="resuelto" ${reporte.estado === 'resuelto' ? 'selected' : ''}>Resuelto</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>Nueva Nota</label>
-                            <textarea id="nuevaNota" class="form-control" placeholder="Agrega una nota sobre las acciones tomadas..." rows="4"></textarea>
+                        <div class="form-actions">
+                            <button class="btn-guardar" onclick="Admin.guardarActualizacion('${reporte.id}')">Guardar Cambios</button>
+                            <button class="btn-eliminar" onclick="Admin.eliminarReporte('${reporte.id}')">Eliminar Reporte</button>
                         </div>
-                        <button class="btn-guardar" onclick="Admin.guardarActualizacion('${reporte.id}')">
-                            Guardar Cambios
-                        </button>
                     </div>
                 </div>
             </div>
@@ -237,11 +199,10 @@ const Admin = (() => {
     };
 
     /**
-     * Guarda las actualizaciones de un reporte
+     * Guarda actualizaciones
      */
-    const guardarActualizacion = async (reporteId) => {
+    const guardarActualizacion = (reporteId) => {
         const nuevoEstado = document.getElementById('nuevoEstado').value;
-        const nuevaNota = document.getElementById('nuevaNota').value;
 
         if (!nuevoEstado) {
             Notificaciones.mostrar('Selecciona un estado', 'error');
@@ -249,33 +210,12 @@ const Admin = (() => {
         }
 
         try {
-            const db = FirebaseConfig.getDB();
-            const reporte = reportes.find(r => r.id === reporteId);
-
-            if (!reporte) {
-                throw new Error('Reporte no encontrado');
-            }
-
-            // Preparar notas
-            let notas = reporte.notas || [];
-            if (nuevaNota.trim()) {
-                notas.push({
-                    contenido: nuevaNota,
-                    timestamp: new Date().toISOString(),
-                    autor: Auth.obtenerUsuario().nombre
-                });
-            }
-
-            // Actualizar reporte
-            await db.collection('reportes_emergencia').doc(reporteId).update({
+            AlmacenamientoReportes.actualizar(reporteId, {
                 estado: nuevoEstado,
-                notas: notas,
-                ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                ultimaActualizacion: new Date().toISOString()
             });
 
             Notificaciones.mostrar('Reporte actualizado correctamente', 'success');
-
-            // Recargar reportes
             cargarReportes();
             cerrarDetalleReporte();
 
@@ -286,7 +226,26 @@ const Admin = (() => {
     };
 
     /**
-     * Cierra el modal de detalles
+     * Elimina un reporte
+     */
+    const eliminarReporte = (reporteId) => {
+        if (!confirm('¿Estás seguro de que deseas eliminar este reporte? Esta acción no se puede deshacer.')) {
+            return;
+        }
+
+        try {
+            AlmacenamientoReportes.eliminar(reporteId);
+            Notificaciones.mostrar('Reporte eliminado correctamente', 'success');
+            cargarReportes();
+            cerrarDetalleReporte();
+        } catch (error) {
+            console.error('Error al eliminar reporte:', error);
+            Notificaciones.mostrar('Error al eliminar reporte', 'error');
+        }
+    };
+
+    /**
+     * Cierra el modal
      */
     const cerrarDetalleReporte = () => {
         const modal = document.getElementById('reportDetailModal');
@@ -297,24 +256,26 @@ const Admin = (() => {
     };
 
     /**
-     * Obtiene la etiqueta de tipo de emergencia
+     * Obtiene etiqueta de tipo
      */
     const obtenerEtiquetaTipo = (tipo) => {
         const tipos = {
-            inundacion: '🌊 Inundación',
-            derrumbe: '🪨 Derrumbe',
-            calle_bloqueada: '🚧 Calle Bloqueada',
-            personas_atrapadas: '🆘 Personas Atrapadas',
-            necesidad_agua: '💧 Necesidad de Agua',
-            necesidad_alimentos: '🍽️ Necesidad de Alimentos',
-            necesidad_medicamentos: '💊 Necesidad de Medicamentos',
+            refugio_mal_ubicado: '📍 Refugio mal ubicado',
+            refugio_inexistente: '❌ Refugio inexistente',
+            informacion_incorrecta: '⚠️ Información incorrecta',
+            refugio_cerrado: '🔒 Refugio cerrado',
+            refugio_lleno: '👥 Refugio lleno',
+            problema_acceso: '🚫 Problema de acceso',
+            problema_seguridad: '🛡️ Problema de seguridad',
+            necesidad_suministros: '📦 Necesidad de suministros',
+            emergencia: '🚨 Emergencia',
             otro: '❓ Otro'
         };
         return tipos[tipo] || tipo;
     };
 
     /**
-     * Obtiene la etiqueta de estado
+     * Obtiene etiqueta de estado
      */
     const obtenerEtiquetaEstado = (estado) => {
         const estados = {
@@ -326,13 +287,11 @@ const Admin = (() => {
     };
 
     /**
-     * Formatea una fecha
+     * Formatea fecha
      */
     const formatearFecha = (fecha) => {
-        if (typeof fecha === 'string') {
-            fecha = new Date(fecha);
-        }
-        return fecha.toLocaleString('es-HN', {
+        const fechaObj = new Date(fecha);
+        return fechaObj.toLocaleString('es-HN', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -344,6 +303,7 @@ const Admin = (() => {
     return {
         inicializar,
         verDetalles,
-        guardarActualizacion
+        guardarActualizacion,
+        eliminarReporte
     };
 })();
