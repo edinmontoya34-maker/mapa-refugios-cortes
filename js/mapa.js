@@ -236,6 +236,11 @@ const Mapa = (() => {
      * Agrega múltiples marcadores al mapa
      */
     const agregarMarcadores = (refugios) => {
+        if (!clusterGroup || !map) {
+            console.warn('⚠️ No se pueden agregar marcadores porque el mapa no está disponible');
+            return;
+        }
+
         limpiarMarcadores();
         refugios.forEach((refugio, index) => {
             // Animar la adición de marcadores
@@ -250,6 +255,11 @@ const Mapa = (() => {
      * Limpia todos los marcadores del mapa
      */
     const limpiarMarcadores = () => {
+        if (!clusterGroup) {
+            marcadores.clear();
+            return;
+        }
+
         clusterGroup.clearLayers();
         marcadores.clear();
     };
@@ -280,7 +290,7 @@ const Mapa = (() => {
      * Ajusta el zoom del mapa para mostrar todos los marcadores con animación
      */
     const ajustarZoom = () => {
-        if (marcadores.size === 0) return;
+        if (!map || !clusterGroup || marcadores.size === 0) return;
         
         const bounds = clusterGroup.getBounds();
         if (bounds.isValid()) {

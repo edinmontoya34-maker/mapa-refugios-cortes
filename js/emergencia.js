@@ -39,26 +39,25 @@ const Emergencia = (() => {
 
         if (btnCancelReport) {
             btnCancelReport.addEventListener('click', () => {
-                Vista.mostrar('mapView');
+                volverAlMapa();
             });
         }
 
         if (btnBackFromReport) {
             btnBackFromReport.addEventListener('click', () => {
-                Vista.mostrar('mapView');
+                volverAlMapa();
             });
         }
 
         if (btnNewReport) {
             btnNewReport.addEventListener('click', () => {
-                if (emergencyForm) emergencyForm.reset();
-                Vista.mostrar('emergencyReportView');
+                abrirFormulario();
             });
         }
 
         if (btnReturnToMap) {
             btnReturnToMap.addEventListener('click', () => {
-                Vista.mostrar('mapView');
+                volverAlMapa();
             });
         }
 
@@ -72,6 +71,50 @@ const Emergencia = (() => {
         }
 
         console.log('✓ Eventos del formulario configurados');
+    };
+
+    /**
+     * Cierra el modal de confirmación
+     */
+    const cerrarConfirmacion = () => {
+        const modal = document.getElementById('reportConfirmationModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    };
+
+    /**
+     * Reinicia el formulario a su estado inicial
+     */
+    const resetearFormulario = () => {
+        const form = document.getElementById('emergencyReportForm');
+        const charCount = document.getElementById('charCount');
+
+        if (form) {
+            form.reset();
+        }
+
+        if (charCount) {
+            charCount.textContent = '0/1000 caracteres';
+        }
+    };
+
+    /**
+     * Abre el formulario de reportes
+     */
+    const abrirFormulario = () => {
+        cerrarConfirmacion();
+        resetearFormulario();
+        Vista.mostrar('emergencyReportView');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    /**
+     * Regresa a la vista principal del mapa
+     */
+    const volverAlMapa = () => {
+        cerrarConfirmacion();
+        Vista.mostrar('mapView');
     };
 
     /**
@@ -173,7 +216,7 @@ const Emergencia = (() => {
             mostrarConfirmacion(reporteId);
 
             // Limpiar formulario
-            form.reset();
+            resetearFormulario();
             Notificaciones.mostrar('Reporte enviado correctamente', 'success');
 
             console.log('✓ Reporte de emergencia enviado:', reporteId);
@@ -203,7 +246,8 @@ const Emergencia = (() => {
     };
 
     return {
-        inicializar
+        inicializar,
+        abrirFormulario
     };
 })();
 

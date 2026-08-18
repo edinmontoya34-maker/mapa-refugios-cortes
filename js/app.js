@@ -18,22 +18,28 @@ const App = (() => {
             Notificaciones.inicializar();
             Auth.inicializar();
             
-            // Inicializar mapa
-            Mapa.inicializar();
+            // Configurar eventos lo antes posible para no bloquear acciones críticas
+            configurarEventos();
+            
+            const mapaDisponible = typeof window.L !== 'undefined' && typeof Mapa !== 'undefined';
+            if (mapaDisponible) {
+                Mapa.inicializar();
+            } else {
+                console.warn('⚠️ Leaflet no está disponible. El mapa no se cargará, pero el módulo de reportes seguirá funcionando.');
+            }
             
             // Cargar refugios
             await Refugios.cargar();
             refugiosActuales = Refugios.obtener();
             
             // Mostrar refugios en el mapa
-            Mapa.agregarMarcadores(refugiosActuales);
-            Mapa.ajustarZoom();
+            if (mapaDisponible) {
+                Mapa.agregarMarcadores(refugiosActuales);
+                Mapa.ajustarZoom();
+            }
             
             // Renderizar lista de refugios
             renderizarLista(refugiosActuales);
-            
-            // Configurar eventos
-            configurarEventos();
             
             console.log('✓ Aplicación lista');
         } catch (error) {
@@ -73,8 +79,10 @@ const App = (() => {
         }
 
         // Evento de botón de reporte
-        if (reportButton) {
-            reportButton.addEventListener('click', () => {
+        if (reportButton && reportButton.dataset.reportesBound !== 'true') {
+            reportButton.dataset.reportesBound = 'true';
+            reportButton.addEventListener('click', (e) => {
+                e.preventDefault();
                 abrirFormularioReporte();
             });
         }
@@ -156,10 +164,13 @@ const App = (() => {
      * Abre el formulario de reporte
      */
     const abrirFormularioReporte = () => {
-        Vista.mostrar('emergencyReportView');
-        // Reiniciar formulario
-        const form = document.getElementById('emergencyReportForm');
-        if (form) form.reset();
+        if (typeof Emergencia !== 'undefined' && typeof Emergencia.abrirFormulario === 'function') {
+            Emergencia.abrirFormulario();
+        } else {
+            Vista.mostrar('emergencyReportView');
+            const form = document.getElementById('emergencyReportForm');
+            if (form) form.reset();
+        }
         console.log('✓ Formulario de reporte abierto');
     };
 
