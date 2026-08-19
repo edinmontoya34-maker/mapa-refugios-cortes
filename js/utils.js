@@ -5,30 +5,44 @@
 
 const Vista = {
     /**
-     * Inicializa el módulo de vistas
+     * Inicializa el módulo de vistas.
+     * Las vistas se controlan también con estilos en línea para que el formulario
+     * de reportes pueda abrirse incluso si una hoja de estilos no se carga.
      */
     inicializar: function() {
         console.log('📺 Inicializando módulo de vistas...');
+
+        const vistas = document.querySelectorAll('.view');
+        vistas.forEach(vista => {
+            vista.style.height = '100%';
+            vista.style.display = vista.classList.contains('active') ? 'block' : 'none';
+        });
+
+        if (!document.querySelector('.view.active')) {
+            this.mostrar('mapView');
+        }
     },
 
     /**
-     * Muestra una vista y oculta las demás
+     * Muestra una vista y oculta las demás.
      */
     mostrar: function(nombreVista) {
-        // Ocultar todas las vistas
+        const vistaSolicitada = document.getElementById(nombreVista);
+        if (!vistaSolicitada) {
+            console.error('Vista no encontrada:', nombreVista);
+            return false;
+        }
+
         const vistas = document.querySelectorAll('.view');
         vistas.forEach(vista => {
-            vista.classList.remove('active');
+            const esVistaActiva = vista === vistaSolicitada;
+            vista.classList.toggle('active', esVistaActiva);
+            vista.style.height = '100%';
+            vista.style.display = esVistaActiva ? 'block' : 'none';
         });
 
-        // Mostrar la vista solicitada
-        const vista = document.getElementById(nombreVista);
-        if (vista) {
-            vista.classList.add('active');
-            console.log('📺 Vista mostrada:', nombreVista);
-        } else {
-            console.error('Vista no encontrada:', nombreVista);
-        }
+        console.log('📺 Vista mostrada:', nombreVista);
+        return true;
     }
 };
 
