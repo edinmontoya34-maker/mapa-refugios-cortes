@@ -205,7 +205,10 @@ const Mapa = (() => {
      * Crea el contenido del popup para un refugio con diseño moderno
      */
     const crearPopup = (refugio) => {
-        const { nombre, tipo, municipio, direccion, telefono } = refugio;
+        const { nombre, tipo, municipio, direccion, comunidad, telefono, latitud, longitud } = refugio;
+        const direccionMostrada = direccion || comunidad || 'No disponible';
+        const destino = `${Number(latitud)},${Number(longitud)}`;
+        const rutaGoogleMaps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destino)}`;
         
         let contenido = `
             <div class="popup-content" style="
@@ -216,9 +219,9 @@ const Mapa = (() => {
             ">
                 <h3 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px;">${nombre}</h3>
                 <div style="border-left: 3px solid #3498db; padding-left: 10px; margin: 8px 0;">
-                    <p style="margin: 4px 0; color: #555; font-size: 13px;"><strong>Tipo:</strong> ${tipo}</p>
-                    <p style="margin: 4px 0; color: #555; font-size: 13px;"><strong>Municipio:</strong> ${municipio}</p>
-                    <p style="margin: 4px 0; color: #555; font-size: 13px;"><strong>Dirección:</strong> ${direccion}</p>
+                    <p style="margin: 4px 0; color: #555; font-size: 13px;"><strong>Tipo:</strong> ${tipo || 'No disponible'}</p>
+                    <p style="margin: 4px 0; color: #555; font-size: 13px;"><strong>Municipio:</strong> ${municipio || 'No disponible'}</p>
+                    <p style="margin: 4px 0; color: #555; font-size: 13px;"><strong>Dirección:</strong> ${direccionMostrada}</p>
         `;
         
         if (telefono) {
@@ -227,6 +230,24 @@ const Mapa = (() => {
         
         contenido += `
                 </div>
+                <a
+                    href="${rutaGoogleMaps}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Cómo llegar a ${nombre} con Google Maps"
+                    style="
+                        display: block;
+                        margin-top: 12px;
+                        padding: 10px 12px;
+                        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+                        color: #fff;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        text-align: center;
+                        text-decoration: none;
+                    "
+                >📍 Cómo llegar</a>
             </div>
         `;
         return contenido;
