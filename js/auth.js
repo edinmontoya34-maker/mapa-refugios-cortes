@@ -8,7 +8,7 @@ const Auth = (() => {
 
     // Datos de demostración (en producción usar backend seguro)
     const ADMIN_DEMO = {
-        email: 'admin@refugios.hn',
+        email: 'edinmontoya34@gmail.com',
         password: 'admin123'
     };
 
@@ -194,5 +194,5 @@ const Auth = (() => {
 
 // Mostrar credenciales de demostración en consola
 console.log('🔐 CREDENCIALES DE DEMOSTRACIÓN:');
-console.log('  Email: admin@refugios.hn');
+console.log('  Email: edinmontoya34@gmail.com');
 console.log('  Contraseña: admin123');
