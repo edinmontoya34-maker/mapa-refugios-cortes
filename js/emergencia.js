@@ -39,26 +39,25 @@ const Emergencia = (() => {
 
         if (btnCancelReport) {
             btnCancelReport.addEventListener('click', () => {
-                Vista.mostrar('mapView');
+                volverAlMapa();
             });
         }
 
         if (btnBackFromReport) {
             btnBackFromReport.addEventListener('click', () => {
-                Vista.mostrar('mapView');
+                volverAlMapa();
             });
         }
 
         if (btnNewReport) {
             btnNewReport.addEventListener('click', () => {
-                if (emergencyForm) emergencyForm.reset();
-                Vista.mostrar('emergencyReportView');
+                abrirFormulario();
             });
         }
 
         if (btnReturnToMap) {
             btnReturnToMap.addEventListener('click', () => {
-                Vista.mostrar('mapView');
+                volverAlMapa();
             });
         }
 
@@ -66,12 +65,73 @@ const Emergencia = (() => {
             reportDescription.addEventListener('input', (e) => {
                 const charCount = document.getElementById('charCount');
                 if (charCount) {
-                    charCount.textContent = e.target.value.length + '/1000 caracteres';
+                    charCount.textContent = obtenerTextoConteoCaracteres(e.target.value.length);
                 }
             });
         }
 
         console.log('✓ Eventos del formulario configurados');
+    };
+
+    /**
+     * Cierra el modal de confirmación
+     */
+    const cerrarConfirmacion = () => {
+        const modal = document.getElementById('reportConfirmationModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    };
+
+    /**
+     * Reinicia el formulario a su estado inicial
+     */
+    const resetearFormulario = () => {
+        const form = document.getElementById('emergencyReportForm');
+        const charCount = document.getElementById('charCount');
+
+        if (form) {
+            form.reset();
+        }
+
+        if (charCount) {
+            charCount.textContent = `0/${obtenerLimiteDescripcion()} caracteres`;
+        }
+    };
+
+    /**
+     * Obtiene el límite configurado para la descripción
+     */
+    const obtenerLimiteDescripcion = () => {
+        const reportDescription = document.getElementById('reportDescription');
+        return reportDescription && reportDescription.maxLength > 0
+            ? reportDescription.maxLength
+            : 1000;
+    };
+
+    /**
+     * Genera el texto del contador de caracteres
+     */
+    const obtenerTextoConteoCaracteres = (cantidadActual) => {
+        return `${cantidadActual}/${obtenerLimiteDescripcion()} caracteres`;
+    };
+
+    /**
+     * Abre el formulario de reportes
+     */
+    const abrirFormulario = () => {
+        cerrarConfirmacion();
+        resetearFormulario();
+        Vista.mostrar('emergencyReportView');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    /**
+     * Regresa a la vista principal del mapa
+     */
+    const volverAlMapa = () => {
+        cerrarConfirmacion();
+        Vista.mostrar('mapView');
     };
 
     /**
@@ -173,7 +233,7 @@ const Emergencia = (() => {
             mostrarConfirmacion(reporteId);
 
             // Limpiar formulario
-            form.reset();
+            resetearFormulario();
             Notificaciones.mostrar('Reporte enviado correctamente', 'success');
 
             console.log('✓ Reporte de emergencia enviado:', reporteId);
@@ -203,7 +263,8 @@ const Emergencia = (() => {
     };
 
     return {
-        inicializar
+        inicializar,
+        abrirFormulario
     };
 })();
 
