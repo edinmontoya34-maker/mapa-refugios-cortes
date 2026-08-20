@@ -1,204 +1,92 @@
 /**
- * Módulo de utilidades para gestionar vistas
- * Controla qué vista se muestra en pantalla
+ * Utilidades de aplicación y almacenamiento compartido de reportes en Firestore.
  */
 
 const Vista = {
-    /**
-     * Inicializa el módulo de vistas.
-     * Las vistas se controlan también con estilos en línea para que el formulario
-     * de reportes pueda abrirse incluso si una hoja de estilos no se carga.
-     */
     inicializar: function() {
-        console.log('📺 Inicializando módulo de vistas...');
-
         const vistas = document.querySelectorAll('.view');
         vistas.forEach(vista => {
             vista.style.height = '100%';
             vista.style.display = vista.classList.contains('active') ? 'block' : 'none';
         });
-
-        if (!document.querySelector('.view.active')) {
-            this.mostrar('mapView');
-        }
+        if (!document.querySelector('.view.active')) this.mostrar('mapView');
     },
-
-    /**
-     * Muestra una vista y oculta las demás.
-     */
     mostrar: function(nombreVista) {
         const vistaSolicitada = document.getElementById(nombreVista);
-        if (!vistaSolicitada) {
-            console.error('Vista no encontrada:', nombreVista);
-            return false;
-        }
-
-        const vistas = document.querySelectorAll('.view');
-        vistas.forEach(vista => {
-            const esVistaActiva = vista === vistaSolicitada;
-            vista.classList.toggle('active', esVistaActiva);
+        if (!vistaSolicitada) return false;
+        document.querySelectorAll('.view').forEach(vista => {
+            const activa = vista === vistaSolicitada;
+            vista.classList.toggle('active', activa);
             vista.style.height = '100%';
-            vista.style.display = esVistaActiva ? 'block' : 'none';
+            vista.style.display = activa ? 'block' : 'none';
         });
-
-        console.log('📺 Vista mostrada:', nombreVista);
         return true;
     }
 };
 
-/**
- * Módulo de notificaciones
- * Muestra toasts con mensajes al usuario
- */
-
 const Notificaciones = {
-    /**
-     * Inicializa el módulo
-     */
-    inicializar: function() {
-        console.log('🔔 Inicializando módulo de notificaciones...');
-    },
-
-    /**
-     * Muestra una notificación
-     */
+    inicializar: function() {},
     mostrar: function(mensaje, tipo = 'info') {
         const toast = document.getElementById('toast');
-        if (!toast) {
-            console.warn('Elemento toast no encontrado');
-            return;
-        }
-
+        if (!toast) return;
         toast.textContent = mensaje;
         toast.className = `toast ${tipo} active`;
-
-        // Remover después de 4 segundos
-        setTimeout(() => {
-            toast.classList.remove('active');
-        }, 4000);
-
-        console.log(`🔔 ${tipo.toUpperCase()}: ${mensaje}`);
+        setTimeout(() => toast.classList.remove('active'), 4000);
+        console.log(`${tipo.toUpperCase()}: ${mensaje}`);
     }
 };
-
-/**
- * Módulo de datos para municipios por departamento
- */
 
 const Datos = {
     municipios: {
         cortes: [
-            'San Pedro Sula',
-            'Choloma',
-            'Puerto Cortés',
-            'La Lima',
-            'Villanueva',
-            'Potrerillos',
-            'Pimienta',
-            'San Manuel',
-            'Omoa',
-            'Baracoa'
+            'San Pedro Sula', 'Choloma', 'Puerto Cortés', 'La Lima', 'Villanueva',
+            'Potrerillos', 'Pimienta', 'San Manuel', 'Omoa', 'Baracoa'
         ]
     },
-
-    /**
-     * Obtiene municipios de un departamento
-     */
-    obtenerMunicipios: function(departamento) {
-        return this.municipios[departamento] || [];
-    }
+    obtenerMunicipios: function(departamento) { return this.municipios[departamento] || []; }
 };
 
-/**
- * Sistema de almacenamiento de reportes en localStorage
- */
-
 const AlmacenamientoReportes = {
-    /**
-     * Clave de almacenamiento
-     */
-    clave: 'reportes_refugios_cortes',
+    coleccion: 'reportes',
 
-    /**
-     * Obtiene todos los reportes
-     */
-    obtenerTodos: function() {
-        try {
-            const datos = localStorage.getItem(this.clave);
-            return datos ? JSON.parse(datos) : [];
-        } catch (error) {
-            console.error('Error al obtener reportes:', error);
-            return [];
-        }
+    async obtenerTodos() {
+        await CONFIG.firebaseReady;
+        const snapshot = await firebase.firestore()
+            .collection(this.coleccion)
+            .orderBy('fecha', 'desc')
+            .get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
 
-    /**
-     * Guarda un nuevo reporte
-     */
-    guardar: function(reporte) {
-        try {
-            const reportes = this.obtenerTodos();
-            reporte.id = Date.now().toString();
-            reporte.fecha = new Date().toISOString();
-            reportes.push(reporte);
-            localStorage.setItem(this.clave, JSON.stringify(reportes));
-            console.log('✓ Reporte guardado:', reporte.id);
-            return reporte.id;
-        } catch (error) {
-            console.error('Error al guardar reporte:', error);
-            throw error;
-        }
+    async guardar(reporte) {
+        await CONFIG.firebaseReady;
+        const referencia = await firebase.firestore().collection(this.coleccion).add({
+            ...reporte,
+            fecha: new Date().toISOString()
+        });
+        console.log('✓ Reporte guardado en Firestore:', referencia.id);
+        return referencia.id;
     },
 
-    /**
-     * Obtiene un reporte por ID
-     */
-    obtenerPorId: function(id) {
-        const reportes = this.obtenerTodos();
-        return reportes.find(r => r.id === id);
+    async obtenerPorId(id) {
+        await CONFIG.firebaseReady;
+        const doc = await firebase.firestore().collection(this.coleccion).doc(id).get();
+        return doc.exists ? { id: doc.id, ...doc.data() } : null;
     },
 
-    /**
-     * Actualiza un reporte
-     */
-    actualizar: function(id, datos) {
-        try {
-            const reportes = this.obtenerTodos();
-            const index = reportes.findIndex(r => r.id === id);
-            if (index >= 0) {
-                reportes[index] = { ...reportes[index], ...datos };
-                localStorage.setItem(this.clave, JSON.stringify(reportes));
-                console.log('✓ Reporte actualizado:', id);
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Error al actualizar reporte:', error);
-            throw error;
-        }
+    async actualizar(id, datos) {
+        await CONFIG.firebaseReady;
+        await firebase.firestore().collection(this.coleccion).doc(id).update(datos);
+        return true;
     },
 
-    /**
-     * Elimina un reporte (solo para admin)
-     */
-    eliminar: function(id) {
-        try {
-            const reportes = this.obtenerTodos();
-            const filtrados = reportes.filter(r => r.id !== id);
-            localStorage.setItem(this.clave, JSON.stringify(filtrados));
-            console.log('✓ Reporte eliminado:', id);
-            return true;
-        } catch (error) {
-            console.error('Error al eliminar reporte:', error);
-            throw error;
-        }
+    async eliminar(id) {
+        await CONFIG.firebaseReady;
+        await firebase.firestore().collection(this.coleccion).doc(id).delete();
+        return true;
     },
 
-    /**
-     * Exporta todos los reportes como JSON
-     */
-    exportar: function() {
-        const reportes = this.obtenerTodos();
-        return JSON.stringify(reportes, null, 2);
+    async exportar() {
+        return JSON.stringify(await this.obtenerTodos(), null, 2);
     }
 };
