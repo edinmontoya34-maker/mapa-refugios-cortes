@@ -1,87 +1,50 @@
 /**
- * Sistema de autenticación para administradores
- * Maneja login, sesión persistente y protección de rutas
+ * Sistema de autenticación para administradores mediante Firebase Authentication.
  */
 
 const Auth = (() => {
     let usuarioActual = null;
+    let auth = null;
 
-    // Datos de demostración (en producción usar backend seguro)
-    const ADMIN_DEMO = {
-        email: 'edinmontoya34@gmail.com',
-        password: 'admin123'
-    };
-
-    /**
-     * Inicializa el sistema de autenticación
-     */
-    const inicializar = () => {
-        console.log('🔐 Inicializando sistema de autenticación...');
-        restaurarSesion();
+    const inicializar = async () => {
+        console.log('🔐 Inicializando autenticación Firebase...');
+        await CONFIG.firebaseReady;
+        auth = firebase.auth();
+        auth.onAuthStateChanged((usuario) => {
+            usuarioActual = usuario && esAdministrador(usuario) ? usuario : null;
+            if (usuario && !esAdministrador(usuario)) {
+                auth.signOut();
+                Notificaciones.mostrar('Esta cuenta no tiene permisos de administrador', 'error');
+            }
+        });
         configurarEventos();
     };
 
-    /**
-     * Restaura la sesión persistente
-     */
-    const restaurarSesion = () => {
-        const sesionGuardada = localStorage.getItem('sesionAdmin');
-        if (sesionGuardada) {
-            try {
-                usuarioActual = JSON.parse(sesionGuardada);
-                console.log('✓ Sesión restaurada:', usuarioActual.email);
-            } catch (error) {
-                console.error('Error al restaurar sesión:', error);
-                localStorage.removeItem('sesionAdmin');
-            }
-        }
-    };
+    const esAdministrador = (usuario) => Boolean(
+        usuario && usuario.email && usuario.email.toLowerCase() === CONFIG.ADMIN_EMAIL.toLowerCase()
+    );
 
-    /**
-     * Configura los eventos de autenticación
-     */
     const configurarEventos = () => {
         const loginForm = document.getElementById('loginForm');
         const btnBackToMap = document.getElementById('btnBackToMap');
         const btnAdminLogin = document.getElementById('btnAdminLogin');
         const btnLogout = document.getElementById('btnLogout');
 
-        if (loginForm) {
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                procesarLogin();
-            });
-        }
-
-        if (btnBackToMap) {
-            btnBackToMap.addEventListener('click', () => {
-                Vista.mostrar('mapView');
-            });
-        }
-
-        if (btnAdminLogin) {
-            btnAdminLogin.addEventListener('click', () => {
-                Vista.mostrar('loginView');
-            });
-        }
-
-        if (btnLogout) {
-            btnLogout.addEventListener('click', () => {
-                logout();
-            });
-        }
+        if (loginForm) loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            procesarLogin();
+        });
+        if (btnBackToMap) btnBackToMap.addEventListener('click', () => Vista.mostrar('mapView'));
+        if (btnAdminLogin) btnAdminLogin.addEventListener('click', () => Vista.mostrar('loginView'));
+        if (btnLogout) btnLogout.addEventListener('click', logout);
     };
 
-    /**
-     * Procesa el login del administrador
-     */
     const procesarLogin = async () => {
-        const email = document.getElementById('loginEmail').value;
+        const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         const btnSubmit = document.getElementById('loginSubmitBtn');
         const errorDiv = document.getElementById('loginError');
 
-        // Validar campos
         if (!email || !password) {
             mostrarError(errorDiv, 'Por favor completa todos los campos');
             return;
@@ -90,66 +53,45 @@ const Auth = (() => {
         try {
             btnSubmit.disabled = true;
             btnSubmit.textContent = 'Verificando...';
-
-            // Simular autenticación
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            if (email !== ADMIN_DEMO.email || password !== ADMIN_DEMO.password) {
-                mostrarError(errorDiv, 'Correo o contraseña incorrectos');
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = 'Iniciar Sesión';
-                console.warn('⚠️ Intento de login fallido:', email);
-                return;
+            await CONFIG.firebaseReady;
+            if (email.toLowerCase() !== CONFIG.ADMIN_EMAIL.toLowerCase()) {
+                throw new Error('Esta cuenta no tiene permisos de administrador');
             }
-
-            // Crear sesión
-            usuarioActual = {
-                email: email,
-                nombre: 'Administrador',
-                rol: 'admin'
-            };
-
-            // Guardar en localStorage
-            localStorage.setItem('sesionAdmin', JSON.stringify(usuarioActual));
-
-            // Limpiar formulario y errores
+            const credencial = await firebase.auth().signInWithEmailAndPassword(email, password);
+            if (!esAdministrador(credencial.user)) {
+                await firebase.auth().signOut();
+                throw new Error('Esta cuenta no tiene permisos de administrador');
+            }
+            usuarioActual = credencial.user;
             document.getElementById('loginForm').reset();
             errorDiv.style.display = 'none';
             errorDiv.textContent = '';
-
-            // Actualizar UI
             actualizarUIAdmin();
-
-            // Mostrar panel admin
             Vista.mostrar('adminView');
             Admin.inicializar();
-
-            Notificaciones.mostrar(`¡Bienvenido ${usuarioActual.nombre}!`, 'success');
-
-            console.log('✓ Login exitoso:', email);
-
+            Notificaciones.mostrar(`¡Bienvenido ${usuarioActual.email}!`, 'success');
         } catch (error) {
             console.error('Error en login:', error);
-            mostrarError(errorDiv, 'Error al iniciar sesión. Intenta más tarde.');
+            mostrarError(errorDiv, traducirError(error));
         } finally {
             btnSubmit.disabled = false;
             btnSubmit.textContent = 'Iniciar Sesión';
         }
     };
 
-    /**
-     * Actualiza la UI con información del administrador
-     */
-    const actualizarUIAdmin = () => {
-        const userInfo = document.getElementById('adminUserInfo');
-        if (userInfo && usuarioActual) {
-            userInfo.textContent = usuarioActual.nombre;
+    const traducirError = (error) => {
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            return 'Correo o contraseña incorrectos';
         }
+        if (error.code === 'auth/too-many-requests') return 'Demasiados intentos. Intenta más tarde.';
+        return error.message || 'Error al iniciar sesión';
     };
 
-    /**
-     * Muestra error en el formulario de login
-     */
+    const actualizarUIAdmin = () => {
+        const userInfo = document.getElementById('adminUserInfo');
+        if (userInfo && usuarioActual) userInfo.textContent = usuarioActual.email;
+    };
+
     const mostrarError = (errorDiv, mensaje) => {
         if (errorDiv) {
             errorDiv.textContent = mensaje;
@@ -157,42 +99,19 @@ const Auth = (() => {
         }
     };
 
-    /**
-     * Verifica si el usuario está autenticado
-     */
-    const estaAutenticado = () => {
-        return usuarioActual !== null;
+    const estaAutenticado = () => esAdministrador(usuarioActual);
+    const obtenerUsuario = () => usuarioActual;
+
+    const logout = async () => {
+        try {
+            await firebase.auth().signOut();
+            usuarioActual = null;
+            Vista.mostrar('mapView');
+            Notificaciones.mostrar('Sesión cerrada correctamente', 'info');
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+        }
     };
 
-    /**
-     * Obtiene el usuario actual
-     */
-    const obtenerUsuario = () => {
-        return usuarioActual;
-    };
-
-    /**
-     * Cierra la sesión
-     */
-    const logout = () => {
-        usuarioActual = null;
-        localStorage.removeItem('sesionAdmin');
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) loginForm.reset();
-        Vista.mostrar('mapView');
-        Notificaciones.mostrar('Sesión cerrada correctamente', 'info');
-        console.log('✓ Logout exitoso');
-    };
-
-    return {
-        inicializar,
-        estaAutenticado,
-        obtenerUsuario,
-        logout
-    };
+    return { inicializar, estaAutenticado, obtenerUsuario, logout };
 })();
-
-// Mostrar credenciales de demostración en consola
-console.log('🔐 CREDENCIALES DE DEMOSTRACIÓN:');
-console.log('  Email: edinmontoya34@gmail.com');
-console.log('  Contraseña: admin123');
