@@ -49,20 +49,43 @@ const Datos = {
 const AlmacenamientoReportes = {
     coleccion: 'reportes',
 
+    obtenerFirestore() {
+        if (!window.firebase || !firebase.firestore) {
+            throw new Error('Firestore no está disponible');
+        }
+        return firebase.firestore();
+    },
+
+    normalizarFecha(fecha) {
+        if (!fecha) return 0;
+        if (typeof fecha.toMillis === 'function') return fecha.toMillis();
+        const milisegundos = Date.parse(fecha);
+        return Number.isNaN(milisegundos) ? 0 : milisegundos;
+    },
+
     async obtenerTodos() {
         await CONFIG.firebaseReady;
-        const snapshot = await firebase.firestore()
+        const snapshot = await this.obtenerFirestore()
             .collection(this.coleccion)
-            .orderBy('fecha', 'desc')
             .get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        return snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => this.normalizarFecha(b.fecha) - this.normalizarFecha(a.fecha));
     },
 
     async guardar(reporte) {
         await CONFIG.firebaseReady;
-        const referencia = await firebase.firestore().collection(this.coleccion).add({
-            ...reporte,
-            fecha: new Date().toISOString()
+        const referencia = await this.obtenerFirestore().collection(this.coleccion).add({
+            tipo: reporte.tipo || 'otro',
+            descripcion: reporte.descripcion || '',
+            estado: 'pendiente',
+            municipio: reporte.municipio || '',
+            ubicacionEspecifica: reporte.ubicacionEspecifica || '',
+            nombre: reporte.nombre || '',
+            telefono: reporte.telefono || '',
+            tipoReporte: reporte.tipoReporte || 'ciudadano',
+            fecha: firebase.firestore.FieldValue.serverTimestamp()
         });
         console.log('✓ Reporte guardado en Firestore:', referencia.id);
         return referencia.id;
@@ -70,19 +93,19 @@ const AlmacenamientoReportes = {
 
     async obtenerPorId(id) {
         await CONFIG.firebaseReady;
-        const doc = await firebase.firestore().collection(this.coleccion).doc(id).get();
+        const doc = await this.obtenerFirestore().collection(this.coleccion).doc(id).get();
         return doc.exists ? { id: doc.id, ...doc.data() } : null;
     },
 
     async actualizar(id, datos) {
         await CONFIG.firebaseReady;
-        await firebase.firestore().collection(this.coleccion).doc(id).update(datos);
+        await this.obtenerFirestore().collection(this.coleccion).doc(id).update(datos);
         return true;
     },
 
     async eliminar(id) {
         await CONFIG.firebaseReady;
-        await firebase.firestore().collection(this.coleccion).doc(id).delete();
+        await this.obtenerFirestore().collection(this.coleccion).doc(id).delete();
         return true;
     },
 
