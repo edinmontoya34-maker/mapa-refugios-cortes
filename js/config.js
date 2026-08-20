@@ -52,21 +52,13 @@ const CONFIG = {
     },
 
     MUNICIPALITIES: [
-        'San Pedro Sula',
-        'Choloma',
-        'Puerto Cortés',
-        'La Lima',
-        'Villanueva',
-        'Potrerillos',
-        'Pimienta',
-        'San Manuel',
-        'Omoa',
-        'Baracoa',
+        'San Pedro Sula', 'Choloma', 'Puerto Cortés', 'La Lima', 'Villanueva',
+        'Potrerillos', 'Pimienta', 'San Manuel', 'Omoa', 'Baracoa',
         'San Antonio de Cortés'
     ]
 };
 
-/** Carga los SDK compat de Firebase sin exponer secretos privados. */
+/** Inicializa Firebase una sola vez y expone una promesa reutilizable. */
 CONFIG.firebaseReady = (() => {
     const scripts = [
         'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js',
@@ -77,20 +69,38 @@ CONFIG.firebaseReady = (() => {
     const cargarScript = (src) => new Promise((resolve, reject) => {
         const existente = document.querySelector(`script[src="${src}"]`);
         if (existente) {
-            existente.addEventListener('load', resolve, { once: true });
-            if (window.firebase) resolve();
+            if (existente.dataset.loaded === 'true') {
+                resolve();
+                return;
+            }
+            existente.addEventListener('load', () => {
+                existente.dataset.loaded = 'true';
+                resolve();
+            }, { once: true });
+            existente.addEventListener('error', () => reject(new Error(`No se pudo cargar Firebase: ${src}`)), { once: true });
             return;
         }
+
         const script = document.createElement('script');
         script.src = src;
-        script.onload = resolve;
+        script.async = false;
+        script.onload = () => {
+            script.dataset.loaded = 'true';
+            resolve();
+        };
         script.onerror = () => reject(new Error(`No se pudo cargar Firebase: ${src}`));
         document.head.appendChild(script);
     });
 
-    return scripts.reduce((promesa, src) => promesa.then(() => cargarScript(src)), Promise.resolve())
+    return scripts
+        .reduce((promise, src) => promise.then(() => cargarScript(src)), Promise.resolve())
         .then(() => {
+            if (!window.firebase) throw new Error('Firebase SDK no está disponible');
             if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
             return firebase;
+        })
+        .catch((error) => {
+            console.error('Error al inicializar Firebase:', error);
+            throw error;
         });
 })();
