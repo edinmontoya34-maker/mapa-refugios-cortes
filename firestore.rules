@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /reportes/{reporteId} {
+      allow create: if request.resource.data.keys().hasAll([
+        'tipo', 'descripcion', 'estado', 'fecha'
+      ])
+      && request.resource.data.tipo is string
+      && request.resource.data.descripcion is string
+      && request.resource.data.estado == 'pendiente';
+
+      allow read, update, delete: if request.auth != null
+        && request.auth.token.email == 'edinmontoya34@gmail.com';
+    }
+  }
+}
